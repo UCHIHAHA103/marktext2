@@ -35,13 +35,12 @@ jobs:
         run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
 
       - name: Rebuild native modules
-        # .npmrc contains 'clang=0' for Linux but it also affects Windows,
-        # forcing MSVC which cannot compile Electron 42+ cppgc headers that
-        # require __builtin_frame_address (a Clang builtin).
-        # Remove that line so electron-rebuild can use Clang-CL on Windows.
+        # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
+        # --useElectronClang makes electron-rebuild use the Clang bundled with
+        # Electron itself, which knows this intrinsic.
         run: |
           (Get-Content .npmrc) | Where-Object { $_ -notmatch '^clang=' } | Set-Content .npmrc
-          npx @electron/rebuild -f
+          npx @electron/rebuild -f --useElectronClang
 
       - name: Build Windows
         run: npm run build:win
