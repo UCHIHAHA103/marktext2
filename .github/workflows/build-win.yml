@@ -40,25 +40,20 @@ jobs:
         # neither applies, causing -Wc++11-narrowing errors. Add msvs_settings.
         shell: pwsh
         run: |
-          $gyp = "node_modules/ced/vendor/compact_enc_det/binding.gyp"
-          if (-not (Test-Path $gyp)) { throw "binding.gyp not found at $gyp" }
-          $content = Get-Content $gyp -Raw
-          if ($content -notmatch 'msvs_settings') {
-            # Inject msvs_settings before xcode_settings
-            $patched = $content -replace '(?ms)("xcode_settings":)', @'
-"msvs_settings": {
-        "VCCLCompilerTool": {
-          "AdditionalOptions": [ "-Wno-c++11-narrowing", "-w" ]
-        }
-      },
-      $1
-'@
-            Set-Content -Path $gyp -Value $patched -NoNewline
-            Write-Host "Patched $gyp:"
-            Get-Content $gyp
-          } else {
-            Write-Host "msvs_settings already present"
-          }
+          python -c "
+          import re, sys
+          p = 'node_modules/ced/vendor/compact_enc_det/binding.gyp'
+          c = open(p, 'r', encoding='utf-8').read()
+          if 'msvs_settings' in c:
+              print('already patched')
+              sys.exit(0)
+          inj = '\"msvs_settings\": { \"VCCLCompilerTool\": { \"AdditionalOptions\": [\"-Wno-c++11-narrowing\", \"-w\"] } },\n      '
+          c2 = c.replace('\"xcode_settings\":', inj + '\"xcode_settings\":', 1)
+          if c == c2:
+              print('FAILED: xcode_settings anchor not found'); sys.exit(1)
+          open(p, 'w', encoding='utf-8').write(c2)
+          print('patched:'); print(c2)
+          "
 
       - name: Rebuild native modules
         # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
