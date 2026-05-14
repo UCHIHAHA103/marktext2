@@ -1,0 +1,60 @@
+name: Build Windows (htmlfix)
+
+on:
+  push:
+    branches:
+      - 'release-v*'
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 60
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GYP_MSVS_VERSION: 2022
+      npm_config_msvs_version: 2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Setup MSBuild (VS2022)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '17.0'
+
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.LOCALAPPDATA }}\electron\Cache
+          key: ${{ runner.os }}-electron-vite-cache-v1-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
+        env:
+          npm_config_msvs_version: 2022
+
+      - name: Rebuild native modules
+        run: npx @electron/rebuild -f
+        env:
+          GYP_MSVS_VERSION: 2022
+          npm_config_msvs_version: 2022
+
+      - name: Build Windows
+        run: npm run build:win
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: marktext2-windows-htmlfix
+          path: dist/*.exe
+          retention-days: 30

@@ -373,7 +373,8 @@ export const LINE_BREAK = '\n'
 
 export const PREVIEW_DOMPURIFY_CONFIG = Object.freeze({
   // do not forbit `class` because `code` element use class to present language
-  FORBID_ATTR: ['style', 'contenteditable'],
+  // do not forbid `style` to allow inline styles in HTML blocks (e.g. cards, custom layouts)
+  FORBID_ATTR: ['contenteditable'],
   ALLOW_DATA_ATTR: false,
   USE_PROFILES: {
     html: true,

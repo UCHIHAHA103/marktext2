@@ -131,8 +131,8 @@ export default function renderLeafBlock(parent, block, activeBlocks, matches, us
         selector += `.${CLASS_OR_ID.AG_HTML_PREVIEW}`
         Object.assign(data.attrs, { spellcheck: 'false' })
 
-        const { disableHtml } = this.muya.options
-        const htmlContent = sanitize(code, PREVIEW_DOMPURIFY_CONFIG, disableHtml)
+        // HTML blocks should always render HTML regardless of the global disableHtml setting
+        const htmlContent = sanitize(code, PREVIEW_DOMPURIFY_CONFIG, false)
 
         // handle empty html bock
         if (/^<([a-z][a-z\d]*)[^>]*?>(\s*)<\/\1>$/.test(htmlContent.trim())) {
