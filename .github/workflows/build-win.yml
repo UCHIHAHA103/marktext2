@@ -36,11 +36,16 @@ jobs:
 
       - name: Rebuild native modules
         # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
-        # --useElectronClang makes electron-rebuild use the Clang bundled with
-        # Electron itself, which knows this intrinsic.
+        # windows-2022 has LLVM pre-installed; point node-gyp to clang-cl.exe.
         run: |
           (Get-Content .npmrc) | Where-Object { $_ -notmatch '^clang=' } | Set-Content .npmrc
-          npx @electron/rebuild -f --useElectronClang
+          $llvm = "C:\Program Files\LLVM\bin"
+          $env:CC  = "$llvm\clang-cl.exe"
+          $env:CXX = "$llvm\clang-cl.exe"
+          $env:AR  = "$llvm\llvm-lib.exe"
+          $env:LD  = "$llvm\lld-link.exe"
+          $env:Path = "$llvm;$env:Path"
+          npx @electron/rebuild -f
 
       - name: Build Windows
         run: npm run build:win
