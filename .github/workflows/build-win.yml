@@ -35,11 +35,11 @@ jobs:
         run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
 
       - name: Rebuild native modules
-        # Electron 42+ cppgc uses __builtin_frame_address (Clang builtin),
-        # must use Clang-CL on Windows. USE_ELECTRON_CLANG=1 overrides .npmrc clang=0.
-        run: npx @electron/rebuild -f
-        env:
-          USE_ELECTRON_CLANG: 1
+        # Electron 42+ cppgc uses __builtin_frame_address (Clang builtin).
+        # .npmrc sets clang=0 for Linux but breaks Windows - override it here.
+        run: |
+          npm config set clang 1
+          npx @electron/rebuild -f
 
       - name: Build Windows
         run: npm run build:win
