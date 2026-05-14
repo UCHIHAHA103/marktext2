@@ -36,12 +36,12 @@ jobs:
 
       - name: Rebuild native modules
         # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
-        # Use MSBuild's ClangCL toolset (pre-installed on windows-2022 runner)
-        # by overriding the platform toolset via GYP_DEFINES.
+        # ClangCL toolset is needed. Also suppress -Wc++11-narrowing for 'ced' module.
         run: |
           (Get-Content .npmrc) | Where-Object { $_ -notmatch '^clang=' } | Set-Content .npmrc
           $env:GYP_DEFINES = "msvs_version=2022 clang_cl=1"
           $env:npm_config_clang = "1"
+          $env:CXXFLAGS = "-Wno-c++11-narrowing"
           npx @electron/rebuild -f
 
       - name: Build Windows
