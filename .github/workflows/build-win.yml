@@ -29,23 +29,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.LOCALAPPDATA }}\electron\Cache
-          key: ${{ runner.os }}-electron-vite-cache-v1-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-electron41-cache-v1-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
 
-      - name: Patch ced compact_enc_det binding.gyp for ClangCL
-        # See .github/scripts/patch-ced-gyp.py for details.
-        run: python .github/scripts/patch-ced-gyp.py
-
       - name: Rebuild native modules
-        # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
-        # GYP_DEFINES=clang_cl=1 makes MSBuild use the ClangCL toolset.
-        shell: pwsh
-        run: |
-          (Get-Content .npmrc) | Where-Object { $_ -notmatch '^clang=' } | Set-Content .npmrc
-          $env:GYP_DEFINES = "msvs_version=2022 clang_cl=1"
-          npx @electron/rebuild -f
+        run: npx @electron/rebuild -f
 
       - name: Build Windows
         run: npm run build:win
