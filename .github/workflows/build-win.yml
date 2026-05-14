@@ -36,15 +36,12 @@ jobs:
 
       - name: Rebuild native modules
         # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
-        # windows-2022 has LLVM pre-installed; point node-gyp to clang-cl.exe.
+        # Use MSBuild's ClangCL toolset (pre-installed on windows-2022 runner)
+        # by overriding the platform toolset via GYP_DEFINES.
         run: |
           (Get-Content .npmrc) | Where-Object { $_ -notmatch '^clang=' } | Set-Content .npmrc
-          $llvm = "C:\Program Files\LLVM\bin"
-          $env:CC  = "$llvm\clang-cl.exe"
-          $env:CXX = "$llvm\clang-cl.exe"
-          $env:AR  = "$llvm\llvm-lib.exe"
-          $env:LD  = "$llvm\lld-link.exe"
-          $env:Path = "$llvm;$env:Path"
+          $env:GYP_DEFINES = "msvs_version=2022 clang_cl=1"
+          $env:npm_config_clang = "1"
           npx @electron/rebuild -f
 
       - name: Build Windows
