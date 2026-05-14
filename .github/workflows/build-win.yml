@@ -35,25 +35,8 @@ jobs:
         run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
 
       - name: Patch ced compact_enc_det binding.gyp for ClangCL
-        # ced's vendor/compact_enc_det/binding.gyp has -Wno-narrowing only in
-        # cflags_cc (Linux) and xcode_settings (macOS). On Windows with ClangCL,
-        # neither applies, causing -Wc++11-narrowing errors. Add msvs_settings.
-        shell: pwsh
-        run: |
-          python -c "
-          import re, sys
-          p = 'node_modules/ced/vendor/compact_enc_det/binding.gyp'
-          c = open(p, 'r', encoding='utf-8').read()
-          if 'msvs_settings' in c:
-              print('already patched')
-              sys.exit(0)
-          inj = '\"msvs_settings\": { \"VCCLCompilerTool\": { \"AdditionalOptions\": [\"-Wno-c++11-narrowing\", \"-w\"] } },\n      '
-          c2 = c.replace('\"xcode_settings\":', inj + '\"xcode_settings\":', 1)
-          if c == c2:
-              print('FAILED: xcode_settings anchor not found'); sys.exit(1)
-          open(p, 'w', encoding='utf-8').write(c2)
-          print('patched:'); print(c2)
-          "
+        # See .github/scripts/patch-ced-gyp.py for details.
+        run: python .github/scripts/patch-ced-gyp.py
 
       - name: Rebuild native modules
         # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
