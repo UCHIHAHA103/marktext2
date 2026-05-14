@@ -34,14 +34,39 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
 
+      - name: Patch ced compact_enc_det binding.gyp for ClangCL
+        # ced's vendor/compact_enc_det/binding.gyp has -Wno-narrowing only in
+        # cflags_cc (Linux) and xcode_settings (macOS). On Windows with ClangCL,
+        # neither applies, causing -Wc++11-narrowing errors. Add msvs_settings.
+        shell: pwsh
+        run: |
+          $gyp = "node_modules/ced/vendor/compact_enc_det/binding.gyp"
+          if (-not (Test-Path $gyp)) { throw "binding.gyp not found at $gyp" }
+          $content = Get-Content $gyp -Raw
+          if ($content -notmatch 'msvs_settings') {
+            # Inject msvs_settings before xcode_settings
+            $patched = $content -replace '(?ms)("xcode_settings":)', @'
+"msvs_settings": {
+        "VCCLCompilerTool": {
+          "AdditionalOptions": [ "-Wno-c++11-narrowing", "-w" ]
+        }
+      },
+      $1
+'@
+            Set-Content -Path $gyp -Value $patched -NoNewline
+            Write-Host "Patched $gyp:"
+            Get-Content $gyp
+          } else {
+            Write-Host "msvs_settings already present"
+          }
+
       - name: Rebuild native modules
         # Electron 42+ cppgc headers use __builtin_frame_address (Clang-only).
-        # ClangCL toolset is needed. Also suppress -Wc++11-narrowing for 'ced' module.
+        # GYP_DEFINES=clang_cl=1 makes MSBuild use the ClangCL toolset.
+        shell: pwsh
         run: |
           (Get-Content .npmrc) | Where-Object { $_ -notmatch '^clang=' } | Set-Content .npmrc
           $env:GYP_DEFINES = "msvs_version=2022 clang_cl=1"
-          $env:npm_config_clang = "1"
-          $env:CXXFLAGS = "-Wno-c++11-narrowing"
           npx @electron/rebuild -f
 
       - name: Build Windows
