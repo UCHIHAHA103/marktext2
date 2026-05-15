@@ -142,6 +142,7 @@ export const loadEditCommands = (commandManager) => {
   commandManager.add(COMMANDS.EDIT_PASTE, nativePaste)
   commandManager.add(COMMANDS.EDIT_PASTE_AS_PLAINTEXT, editorPasteAsPlainText)
   commandManager.add(COMMANDS.EDIT_REDO, editorRedo)
+  commandManager.add(COMMANDS.EDIT_REDO_ALT, editorRedo) // Ctrl+Y 别名（#2183）
   commandManager.add(COMMANDS.EDIT_REPLACE, editorReplace)
   commandManager.add(COMMANDS.EDIT_SCREENSHOT, screenshot)
   commandManager.add(COMMANDS.EDIT_SELECT_ALL, editorSelectAll)

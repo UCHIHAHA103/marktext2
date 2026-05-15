@@ -13,6 +13,7 @@ const COMMANDS = Object.freeze({
   EDIT_PASTE: 'edit.paste',
   EDIT_PASTE_AS_PLAINTEXT: 'edit.paste-as-plaintext',
   EDIT_REDO: 'edit.redo',
+  EDIT_REDO_ALT: 'edit.redo-alt', // Windows Ctrl+Y 别名（#2183）
   EDIT_REPLACE: 'edit.replace',
   EDIT_SCREENSHOT: 'edit.screenshot',
   EDIT_SELECT_ALL: 'edit.select-all',

@@ -97,12 +97,15 @@ div.ag-show-quick-insert-hint
   word-break: break-word;
 }
 
-.ag-code-content::-webkit-scrollbar {
-  /* Show scroll bars to deal with unwrapped lines in code blocks,
-       regardless of the preference for hiding scroll bars
-       generally. */
-  display: block;
+/* #2496: 代码块长行自动折行，不再需要横向滚动 */
+.ag-code-content {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
 
+.ag-code-content::-webkit-scrollbar {
+  display: block;
   height: 6px;
   width: 3px;
 }
@@ -1309,4 +1312,9 @@ i.ag-footnote-backlink {
   font-family: sans-serif;
   cursor: pointer;
   z-index: 100;
+}
+
+/* #1119: 文档末尾可滚动留白，光标不再贴底 */
+#ag-editor-id {
+  padding-bottom: 30vh;
 }

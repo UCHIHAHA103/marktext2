@@ -30,6 +30,7 @@ export default new Map([
   // Edit menu
   ['edit.undo', 'Ctrl+Z'],
   ['edit.redo', 'Ctrl+Shift+Z'],
+  ['edit.redo-alt', 'Ctrl+Y'], // Windows 用户习惯（#2183）
   ['edit.cut', 'Ctrl+X'],
   ['edit.copy', 'Ctrl+C'],
   ['edit.paste', 'Ctrl+V'],

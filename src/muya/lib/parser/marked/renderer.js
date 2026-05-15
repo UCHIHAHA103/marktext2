@@ -184,6 +184,11 @@ Renderer.prototype.del = function(text) {
   return '<del>' + text + '</del>'
 }
 
+// #2552: ==高亮== 语法渲染
+Renderer.prototype.mark = function(text) {
+  return '<mark>' + text + '</mark>'
+}
+
 Renderer.prototype.link = function(href, title, text) {
   href = cleanUrl(this.options.sanitize, this.options.baseUrl, href)
   if (href === null) {

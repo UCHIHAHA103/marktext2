@@ -287,6 +287,17 @@ InlineLexer.prototype.output = function(src) {
       continue
     }
 
+    // mark ==highlight== (#2552)
+    if (this.rules.mark) {
+      cap = this.rules.mark.exec(src)
+      if (cap) {
+        src = src.substring(cap[0].length)
+        lastChar = cap[0].charAt(cap[0].length - 1)
+        out += this.renderer.mark(this.output(cap[2]))
+        continue
+      }
+    }
+
     // autolink
     cap = this.rules.autolink.exec(src)
     if (cap) {

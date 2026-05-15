@@ -110,11 +110,13 @@ export const pedantic = Object.assign({}, normal, {
  */
 
 export const gfm = Object.assign({}, normal, {
-  escape: edit(inline.escape).replace('])', '~|])').getRegex(),
+  escape: edit(inline.escape).replace('])', '~|=])').getRegex(),
   _extended_email: /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/,
   url: /^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/,
   _backpedal: /(?:[^?!.,:;*_~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_~)]+(?!$))+/,
   del: /^(~~?)(?=[^\s~])([\s\S]*?[^\s~])\1(?=[^~]|$)/,
+  // #2552: ==高亮== 语法，参照 del 的实现
+  mark: /^(==)(?=[^\s=])([\s\S]*?[^\s=])\1(?=[^=]|$)/,
 
   // ------------------------
   // patched
