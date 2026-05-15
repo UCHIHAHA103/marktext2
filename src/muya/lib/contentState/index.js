@@ -39,6 +39,16 @@ import importMarkdown from '../utils/importMarkdown'
 import Cursor from '../selection/cursor'
 import escapeCharactersMap, { escapeCharacters } from '../parser/escapeCharacter'
 
+// #debug: 高密度日志工具
+let _logFs = null
+function csLog(msg) {
+  try {
+    if (!_logFs) _logFs = require('fs')
+    const t = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+    _logFs.appendFileSync('C:\\Users\\Admin\\marktext-fold.log', `${t} [cs] ${msg}\n`)
+  } catch (e) { /* ignore */ }
+}
+
 const prototypes = [
   coreApi,
   marktextApi,
@@ -145,6 +155,13 @@ class ContentState {
       cursor = new Cursor(cursor)
     }
 
+    // #debug: 记录 cursor 变化（key 变化时才写日志，避免 noise）
+    const oldKey = this.currentCursor && this.currentCursor.start && this.currentCursor.start.key
+    const newKey = cursor && cursor.start && cursor.start.key
+    if (oldKey !== newKey) {
+      csLog(`cursor change: ${oldKey} → ${newKey} isEdit=${cursor.isEdit}`)
+    }
+
     this.prevCursor = this.currentCursor
     this.currentCursor = cursor
 
@@ -214,6 +231,9 @@ class ContentState {
   }
 
   setCursor() {
+    const key = this.cursor && this.cursor.start && this.cursor.start.key
+    const block = key ? this.getBlock(key) : null
+    csLog(`setCursor: key=${key} blockExists=${!!block} hiddenByFold=${block && block.hiddenByFold}`)
     selection.setCursorRange(this.cursor)
   }
 
@@ -240,6 +260,9 @@ class ContentState {
       blocks,
       searchMatches: { matches, index }
     } = this
+    const curKey = this.cursor && this.cursor.start && this.cursor.start.key
+    const curIsEdit = this.cursor && this.cursor.isEdit
+    csLog(`render(isRenderCursor=${isRenderCursor}) cursorKey=${curKey} isEdit=${curIsEdit} blocks=${blocks.length}`)
     const activeBlocks = this.getActiveBlocks()
     if (clearCache) {
       this.stateRender.tokenCache.clear()
@@ -264,6 +287,8 @@ class ContentState {
       blocks,
       searchMatches: { matches, index }
     } = this
+    const curKey = this.cursor && this.cursor.start && this.cursor.start.key
+    csLog(`partialRender cursorKey=${curKey} isEdit=${this.cursor && this.cursor.isEdit}`)
     const activeBlocks = this.getActiveBlocks()
     const [startKey, endKey] = this.renderRange
     matches.forEach((m, i) => {

@@ -27,7 +27,15 @@ const updateCtrl = (ContentState) => {
     const startBlock = this.getBlock(cStart ? cStart.key : anchor.key)
     const endBlock = this.getBlock(cEnd ? cEnd.key : focus.key)
     // #2451: cursor key 可能是 '__readonly__' 等哑值，getBlock 返回 null 时直接跳过
-    if (!startBlock || !endBlock) return false
+    if (!startBlock || !endBlock) {
+      try {
+        const fs = require('fs')
+        const t = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+        fs.appendFileSync('C:\\Users\\Admin\\marktext-fold.log',
+          `${t} [WARN] checkNeedRender: null block! startKey=${cStart && cStart.key} endKey=${cEnd && cEnd.key}\n`)
+      } catch (e) { /* ignore */ }
+      return false
+    }
     const startOffset = cStart ? cStart.offset : anchor.offset
     const endOffset = cEnd ? cEnd.offset : focus.offset
     const NO_NEED_TOKEN_REG = /text|hard_line_break|soft_line_break/

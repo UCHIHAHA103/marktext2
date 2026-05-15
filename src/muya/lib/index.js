@@ -39,6 +39,7 @@ class Muya {
     const { markdown } = this.options
     this.markdown = markdown
     this.container = getContainer(container, this.options)
+    muyaLog(`===== marktext 启动 ${new Date().toLocaleString('zh-CN')} =====`)
     this.eventCenter = new EventCenter()
     this.tooltip = new ToolTip(this)
     // UI plugins
