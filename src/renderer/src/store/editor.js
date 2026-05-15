@@ -439,6 +439,8 @@ export const useEditorStore = defineStore('editor', {
             tab.lastSavedHistoryId = tab.history.stack[tab.history.lastEditIndex].id
           }
           tab.isSaved = true
+          // 记录当前存盘内容，用于"增删后恢复原内容"时准确判断是否已保存
+          tab.savedMarkdown = tab.markdown
           debouncedSendBufferedState()
         }
       })
@@ -1185,6 +1187,15 @@ export const useEditorStore = defineStore('editor', {
       // PR #4146: 跳过打开文件后 Muya 的首次序列化（防止与磁盘差异导致误报未保存）
       if (tab.ignoreNextContentChangeForSaveStatus) {
         tab.ignoreNextContentChangeForSaveStatus = false
+        // 记录初始磁盘内容，用于后续"增删后恢复原内容"时判断是否仍为已保存状态
+        tab.savedMarkdown = markdown
+        debouncedSendBufferedState()
+        return
+      }
+
+      // 内容与存盘时完全一致 → 恢复已保存状态（解决"输入后再删除仍显示未保存"问题）
+      if (tab.savedMarkdown !== undefined && markdown === tab.savedMarkdown) {
+        tab.isSaved = true
         debouncedSendBufferedState()
         return
       }

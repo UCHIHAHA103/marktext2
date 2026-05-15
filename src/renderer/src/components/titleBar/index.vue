@@ -68,6 +68,9 @@
             <div class="title-item">
               <span class="front">{{ t('menu.counter.paragraphs') }}:</span><span class="text">{{ wordCount['paragraph'] }}</span>
             </div>
+            <div v-if="selectedWordCount" class="title-item" style="color: var(--activeLinkColor, #d03050); margin-top: 4px;">
+              <span class="front">已选字数:</span><span class="text">{{ selectedWordCount }}</span>
+            </div>
           </template>
           <div
             v-if="wordCount"
@@ -78,14 +81,7 @@
             <span class="text-center-vertical">{{ `${HASH[show].short} ${wordCount[show]}` }}</span>
           </div>
         </el-tooltip>
-        <!-- #2791: 选中文字字数 -->
-        <div
-          v-if="selectedWordCount"
-          class="word-count selected-word-count"
-          :class="[{ 'title-no-drag': platform !== 'darwin' }]"
-        >
-          <span class="text-center-vertical">{{ `Sel: ${selectedWordCount}` }}</span>
-        </div>
+        <!-- #2791: 已选字数已移入 W 气泡弹窗，此处不再显示 -->
         <!-- #2451: 阅读/编辑模式切换按钮 -->
         <div
           v-if="pathname"

@@ -173,7 +173,7 @@ const showUnsavedFilesMessage = async(win, files) => {
   }
 
   const { response } = await dialog.showMessageBox(win, {
-    type: 'warning',
+    type: 'question',
     buttons: [t('dialog.save'), t('dialog.dontSave'), t('dialog.cancel')],
     defaultId: 0,
     message: t('dialog.saveChanges', {
