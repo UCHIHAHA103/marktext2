@@ -133,7 +133,6 @@ class Muya {
   }
 
   dispatchSelectionChange = (cursor) => {
-    if (this.container && this.container.getAttribute('contenteditable') === 'false') return
     const selectionChanges = this.contentState.selectionChange(cursor)
 
     if (!this.container) return
@@ -467,6 +466,9 @@ class Muya {
       this.container.setAttribute('contenteditable', !options.readOnly)
       if (options.readOnly) {
         this.container.classList.add('ag-read-only')
+        // 清除浏览器选区，并重渲染（不放置光标），消除活跃 block 的语法标记
+        if (typeof window !== 'undefined') window.getSelection().removeAllRanges()
+        this.contentState.render(false)
       } else {
         this.container.classList.remove('ag-read-only')
       }

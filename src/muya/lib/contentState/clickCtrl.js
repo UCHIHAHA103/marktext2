@@ -8,6 +8,19 @@ const clickCtrl = (ContentState) => {
   ContentState.prototype.clickHandler = function(event) {
     const { eventCenter } = this.muya
     const { target } = event
+
+    // #1869: 折叠图标事件委托（不依赖 snabbdom on 属性，partialRender 后仍有效）
+    const foldIcon = target.closest('.ag-fold-icon')
+    if (foldIcon) {
+      event.stopPropagation()
+      const key = foldIcon.getAttribute('data-key')
+      if (key) this.toggleFold(key)
+      return
+    }
+
+    // #2451: 阅读模式下屏蔽编辑点击，不更新 cursor，不触发重渲染
+    if (this.muya.container.getAttribute('contenteditable') === 'false') return
+
     if (isMuyaEditorElement(target)) {
       const lastBlock = this.getLastBlock()
       const archor = this.findOutMostBlock(lastBlock)

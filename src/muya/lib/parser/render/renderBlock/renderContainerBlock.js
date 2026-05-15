@@ -47,6 +47,15 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
     this.renderingTable = block
   } else if (/thead|tbody/.test(type)) {
     this.renderingRowContainer = block
+  } else if (type === 'blockquote') {
+    // #3764: GitHub Alerts — 检测 > [!NOTE/TIP/IMPORTANT/WARNING/CAUTION] 并加样式类
+    const firstPara = block.children && block.children[0]
+    const firstSpan = firstPara && firstPara.children && firstPara.children[0]
+    const firstText = (firstSpan && firstSpan.text) || ''
+    const alertMatch = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.exec(firstText)
+    if (alertMatch) {
+      selector += `.ag-github-alert.ag-github-alert-${alertMatch[1].toLowerCase()}`
+    }
   }
 
   const children = block.children.map(child => this.renderBlock(block, child, activeBlocks, matches, useCache, t))
@@ -144,35 +153,13 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
       })
       selector += `.${headingStyle}`
 
-      // #1869: 标题折叠图标（仅当该标题下有可折叠内容时显示）
+      // #1869: 标题折叠图标（事件委托到 clickCtrl，此处不挂 on.click）
       if (block.hasFoldableContent) {
-        const foldChar = block.folded ? '\u25B6' : '\u25BC'
         const foldIcon = h(
           'span.ag-fold-icon',
-          {
-            attrs: { 'data-key': key, contenteditable: 'false' },
-            style: { opacity: '0' },
-            on: {
-              mousedown: (e) => { e.preventDefault(); e.stopPropagation() },
-              click: (e) => {
-                e.preventDefault(); e.stopPropagation()
-                console.log('[FOLD] icon click', key, 'folded:', block.folded)
-                this.muya.contentState.toggleFold(key)
-              }
-            }
-          },
-          [foldChar]
+          { attrs: { 'data-key': key } },
+          [block.folded ? '▶' : '▼']
         )
-        // JS hover 替代 CSS :hover（更可靠）
-        if (!data.on) data.on = {}
-        data.on.mouseenter = (e) => {
-          const icon = e.target.closest && e.target.closest('h1,h2,h3,h4,h5,h6') ? e.target.closest('h1,h2,h3,h4,h5,h6').querySelector('.ag-fold-icon') : e.currentTarget.querySelector('.ag-fold-icon')
-          if (icon) icon.style.opacity = '1'
-        }
-        data.on.mouseleave = (e) => {
-          const icon = e.target.closest && e.target.closest('h1,h2,h3,h4,h5,h6') ? e.target.closest('h1,h2,h3,h4,h5,h6').querySelector('.ag-fold-icon') : e.currentTarget.querySelector('.ag-fold-icon')
-          if (icon) icon.style.opacity = '0'
-        }
         children.unshift(foldIcon)
       }
     }

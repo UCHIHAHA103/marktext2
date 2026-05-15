@@ -163,12 +163,14 @@ class ContentState {
         // need to store the whole state. Therefore, we push history only when the
         // user stops typing. Pushing one pending entry allows us to commit the
         // change before an undo action is triggered to partially solve #1321.
+        // #1321 改进：缩短提交间隔（500ms），让每次停顿都产生撤销点，
+        // 减少单次撤销跳过的字符数量
         if (this.historyTimer) clearTimeout(this.historyTimer)
         this.history.pushPending(getHistoryState())
 
         this.historyTimer = setTimeout(() => {
           this.history.commitPending()
-        }, 1500)
+        }, 500)
       } else {
         // Push history immediately
         this.history.push(getHistoryState())
@@ -212,8 +214,6 @@ class ContentState {
   }
 
   setCursor() {
-    // 只读/预览模式：不设置 DOM 光标，否则 inline 元素会进入激活状态显示语法标记
-    if (this.muya && this.muya.container && this.muya.container.getAttribute('contenteditable') === 'false') return
     selection.setCursorRange(this.cursor)
   }
 
@@ -287,7 +287,6 @@ class ContentState {
     const blocksToRender = blocks.slice(startIndex, endIndex)
 
     this.setNextRenderRange()
-    this.markFoldedBlocks()
     this.stateRender.collectLabels(blocks)
     this.stateRender.partialRender(blocksToRender, activeBlocks, matches, startKey, endKey)
     if (isRenderCursor) {
@@ -308,7 +307,6 @@ class ContentState {
       m.active = i === index
     })
     this.setNextRenderRange()
-    this.markFoldedBlocks()
     this.stateRender.collectLabels(blocks)
     this.stateRender.singleRender(block, activeBlocks, matches)
     if (isRenderCursor) {
