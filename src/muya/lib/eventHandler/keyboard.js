@@ -206,6 +206,15 @@ class Keyboard {
     const { container, eventCenter, contentState } = this.muya
     const inputHandler = (event) => {
       if (!this.isComposed) {
+        // #1321 改进：空格/标点作为单词边界，立即提交 pending 历史，实现按词撤销
+        if (
+          event.inputType === 'insertText' &&
+          event.data &&
+          /[\s，。；、！？,.;!?]/.test(event.data)
+        ) {
+          if (contentState.historyTimer) clearTimeout(contentState.historyTimer)
+          contentState.history.commitPending()
+        }
         contentState.inputHandler(event)
         this.muya.dispatchChange()
       }

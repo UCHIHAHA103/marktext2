@@ -655,7 +655,9 @@ const importRegister = (ContentState) => {
       cursor = {}
       const firstBlock = this.getFirstBlock()
       const key = firstBlock.key
-      const offset = firstBlock.text.length
+      // #3473: 无保存光标时置于文档开头（offset=0）而非第一行末尾
+      // 原来 offset = firstBlock.text.length 会导致单段落文档光标跳到 EOF
+      const offset = 0
       cursor.anchor = { key, offset }
       cursor.focus = { key, offset }
       cursor.start = { key, offset }

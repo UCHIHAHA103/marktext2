@@ -955,12 +955,6 @@ const handleFileChange = ({
     }
 
     if (typeof newMarkdown === 'string') {
-      console.log('handleFileChange: setting markdown with cursor and renderCursor', {
-        newCursor,
-        renderCursor,
-        muyaIndexCursor,
-        blocks
-      })
       editor.value.setMarkdown(newMarkdown, newCursor, renderCursor, muyaIndexCursor, blocks)
     } else if (newCursor) {
       editor.value.setCursor(newCursor)
