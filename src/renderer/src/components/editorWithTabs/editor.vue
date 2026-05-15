@@ -237,7 +237,7 @@ watch(focus, (value) => {
 })
 
 // #2451: 监听阅读/编辑状态变化，实时更新 muya
-watch(isReadOnly, (value) => {
+watch(() => isReadOnly?.value ?? false, (value) => {
   if (editor.value) {
     editor.value.setOptions({ readOnly: value })
   }
@@ -743,6 +743,7 @@ const scrollToCursor = (duration = 300) => {
 }
 
 const scrollToCords = (y) => {
+  if (!editor.value) return
   const { container } = editor.value
   // Depending on how much the user previously scrolled, sometimes the container has not fully rendered all elements.
   // Hence, container.scrollHeight < [saved scrollTop]
@@ -1003,6 +1004,7 @@ const handleScreenShot = () => {
 }
 
 const handleResetPaddingBottom = () => {
+  if (!editor.value) return
   const { container } = editor.value
   const newScollableHeightWithoutPadding =
     container.scrollHeight -
@@ -1076,7 +1078,7 @@ onMounted(() => {
     clipboardFilePath: guessClipboardFilePath,
     imagePathAutoComplete,
     t, // Add the translation function
-    readOnly: isReadOnly.value // #2451
+    readOnly: isReadOnly?.value ?? false // #2451 - optional chain guards undefined ref
   }
 
   if (/dark/i.test(theme.value)) {
