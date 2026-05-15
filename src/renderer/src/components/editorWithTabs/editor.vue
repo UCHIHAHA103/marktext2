@@ -1027,14 +1027,16 @@ const resizeObserverForEditor = new ResizeObserver(handleResetPaddingBottom)
 onMounted(() => {
   // 早期日志：在任何可能崩溃的代码之前记录状态
   try {
+    var _isRO = typeof isReadOnly
+    var _dm = typeof defaultEditMode
     console.log('[MT] onMounted START', {
-      isReadOnlyRef: typeof isReadOnly,
-      isReadOnlyVal: String(isReadOnly?.value),
-      defaultEditModeRef: typeof defaultEditMode,
-      defaultEditModeVal: String(defaultEditMode?.value),
-      prefKeys: Object.keys(preferencesStore.\).filter(k => k.includes('edit') || k.includes('Read') || k.includes('Mode')),
+      isReadOnlyRefType: _isRO,
+      isReadOnlyVal: String(isReadOnly == null ? 'NULL' : isReadOnly.value),
+      defaultEditModeRefType: _dm,
+      defaultEditModeVal: String(defaultEditMode == null ? 'NULL' : defaultEditMode.value),
+      hasEditor: !!editor.value,
     })
-  } catch(e) { console.error('[MT] onMounted early log failed:', e) }
+  } catch(e2) { console.error('[MT] early log err:', e2) }
   printer = new Printer()
   const ele = editorRef.value
 
