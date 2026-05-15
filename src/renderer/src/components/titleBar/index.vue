@@ -78,6 +78,14 @@
             <span class="text-center-vertical">{{ `${HASH[show].short} ${wordCount[show]}` }}</span>
           </div>
         </el-tooltip>
+        <!-- #2791: 选中文字字数 -->
+        <div
+          v-if="selectedWordCount"
+          class="word-count selected-word-count"
+          :class="[{ 'title-no-drag': platform !== 'darwin' }]"
+        >
+          <span class="text-center-vertical">{{ `Sel: ${selectedWordCount}` }}</span>
+        </div>
       </div>
       <div
         v-if="titleBarStyle === 'custom' && !isFullScreen && !isOsx"
@@ -153,6 +161,7 @@ const props = defineProps({
   pathname: String,
   active: Boolean,
   wordCount: Object,
+  selectedWordCount: { type: Number, default: null }, // #2791
   platform: String,
   isSaved: Boolean
 })

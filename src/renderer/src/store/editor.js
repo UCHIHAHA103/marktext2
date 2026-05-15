@@ -1260,6 +1260,24 @@ export const useEditorStore = defineStore('editor', {
         }
       }
 
+      // #2791: 计算选中文字字数
+      let selectedWordCount = null
+      if (start.key !== end.key || start.offset !== end.offset) {
+        let selectedText = ''
+        if (start.key === end.key && start.block && start.block.text) {
+          selectedText = start.block.text.substring(start.offset, end.offset)
+        } else {
+          const domSel = window.getSelection()
+          if (domSel && domSel.rangeCount > 0) selectedText = domSel.toString()
+        }
+        if (selectedText) {
+          const chinese = (selectedText.match(/[\u4e00-\u9fa5]/g) || []).length
+          const words = selectedText.replace(/[\u4e00-\u9fa5]/g, '').trim().split(/\s+/).filter(Boolean).length
+          selectedWordCount = chinese + words
+        }
+      }
+      if (this.currentFile) this.currentFile.selectedWordCount = selectedWordCount
+
       const { windowId } = global.marktext.env
       window.electron.ipcRenderer.send(
         'mt::editor-selection-changed',

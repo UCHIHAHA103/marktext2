@@ -41,6 +41,15 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
     this.renderingTable = block
   } else if (/thead|tbody/.test(type)) {
     this.renderingRowContainer = block
+  } else if (type === 'blockquote') {
+    // #3764: GitHub Alerts — 检测 > [!NOTE/TIP/IMPORTANT/WARNING/CAUTION] 并加样式类
+    const firstPara = block.children && block.children[0]
+    const firstSpan = firstPara && firstPara.children && firstPara.children[0]
+    const firstText = (firstSpan && firstSpan.text) || ''
+    const alertMatch = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.exec(firstText)
+    if (alertMatch) {
+      selector += `.ag-github-alert.ag-github-alert-${alertMatch[1].toLowerCase()}`
+    }
   }
 
   const children = block.children.map(child => this.renderBlock(block, child, activeBlocks, matches, useCache, t))

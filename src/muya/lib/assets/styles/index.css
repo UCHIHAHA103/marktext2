@@ -1318,3 +1318,21 @@ i.ag-footnote-backlink {
 #ag-editor-id {
   padding-bottom: 30vh;
 }
+
+/* #3764: GitHub Alerts 样式 */
+.ag-github-alert {
+  border-left: 4px solid;
+  padding: 8px 16px;
+  border-radius: 0 4px 4px 0;
+  margin: 8px 0;
+}
+.ag-github-alert-note    { border-color: #58a6ff; background: rgba(88,166,255,.08); }
+.ag-github-alert-tip     { border-color: #3fb950; background: rgba(63,185,80,.08); }
+.ag-github-alert-important { border-color: #a371f7; background: rgba(163,113,247,.08); }
+.ag-github-alert-warning { border-color: #d29922; background: rgba(210,153,34,.08); }
+.ag-github-alert-caution { border-color: #f85149; background: rgba(248,81,73,.08); }
+/* Alert 首行 [!TYPE] 标签样式 */
+.ag-github-alert > p:first-child > span:first-child {
+  font-weight: 600;
+  opacity: 0.9;
+}

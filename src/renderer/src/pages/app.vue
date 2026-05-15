@@ -9,6 +9,7 @@
         :filename="filename"
         :active="windowActive"
         :word-count="wordCount"
+        :selected-word-count="selectedWordCount"
         :platform="platform"
         :is-saved="isSaved"
       />
@@ -91,6 +92,7 @@ const isSaved = computed(() => currentFile.value?.isSaved)
 const markdown = computed(() => currentFile.value?.markdown)
 const cursor = computed(() => currentFile.value?.cursor)
 const wordCount = computed(() => currentFile.value?.wordCount)
+const selectedWordCount = computed(() => currentFile.value?.selectedWordCount ?? null) // #2791
 const muyaIndexCursor = computed(() => currentFile.value?.muyaIndexCursor)
 
 const hasCurrentFile = computed(() => {

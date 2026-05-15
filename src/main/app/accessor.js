@@ -32,7 +32,7 @@ class Accessor {
   _loadCommands() {
     const { commandManager } = this
     loadDefaultCommands(commandManager)
-    loadMenuCommands(commandManager)
+    loadMenuCommands(commandManager, this.preferences) // #3883: 传入 preferences
 
     if (this.env.isDevMode) {
       commandManager.__verifyDefaultCommands()

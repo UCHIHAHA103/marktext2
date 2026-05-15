@@ -1,6 +1,9 @@
 import { rename as fsRename } from 'fs-extra'
 import path from 'path'
 import { BrowserWindow, app, dialog, shell, ipcMain } from 'electron'
+
+// #3883: 模块级 preferences 引用，由 loadFileCommands 注入
+let _preferences = null
 import log from 'electron-log'
 import { isDirectory, isFile, exists } from 'common/filesystem'
 import { MARKDOWN_EXTENSIONS, isMarkdownFile } from 'common/filesystem/paths'
@@ -164,6 +167,11 @@ const handleResponseForSave = async(e, id, filename, pathname, markdown, options
 }
 
 const showUnsavedFilesMessage = async(win, files) => {
+  // #3883: 如果 confirmOnExit 关闭，直接丢弃未保存内容并关闭
+  if (_preferences && _preferences.getItem('confirmOnExit') === false) {
+    return { needSave: false }
+  }
+
   const { response } = await dialog.showMessageBox(win, {
     type: 'warning',
     buttons: [t('dialog.save'), t('dialog.dontSave'), t('dialog.cancel')],
@@ -675,7 +683,8 @@ export const clearRecentlyUsed = () => {
 
 // --- Commands -------------------------------------------------------------
 
-export const loadFileCommands = (commandManager) => {
+export const loadFileCommands = (commandManager, preferences) => {
+  if (preferences) _preferences = preferences
   commandManager.add(COMMANDS.FILE_CHECK_UPDATE, checkUpdates)
   commandManager.add(COMMANDS.FILE_CLOSE_TAB, closeTab)
   commandManager.add(COMMANDS.FILE_CLOSE_WINDOW, closeWindow)

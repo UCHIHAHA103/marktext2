@@ -1,4 +1,4 @@
-{
+﻿{
   "autoSave": {
     "description": "General--Automatically save the content being edited.",
     "type": "boolean",
