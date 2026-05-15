@@ -342,8 +342,15 @@ const pasteCtrl = (ContentState) => {
     const text = (rawText || event.clipboardData.getData('text/plain')).replace(/\r/g, '')
     let html = (rawHtml || event.clipboardData.getData('text/html')).replace(/\r/g, '')
 
+    const { start, end } = this.cursor
+    const startBlock = this.getBlock(start.key)
+
+    // PR #1882: 光标在链接语法内（如 [text](| ）时不自动把 URL 转成 [title](url)，避免产生嵌套链接
+    const textBeforeCursor = startBlock ? startBlock.text.substring(0, start.offset) : ''
+    const insideLinkHref = /\]\($/.test(textBeforeCursor) || /\]\([^)]*$/.test(textBeforeCursor)
+
     // Support pasted URLs from Firefox.
-    if (URL_REG.test(text) && !/\s/.test(text) && !html) {
+    if (URL_REG.test(text) && !/\s/.test(text) && !html && !insideLinkHref) {
       html = `<a href="${text}">${text}</a>`
     }
 
@@ -352,8 +359,6 @@ const pasteCtrl = (ContentState) => {
     html = await this.standardizeHTML(html)
 
     let copyType = this.checkCopyType(html, text)
-    const { start, end } = this.cursor
-    const startBlock = this.getBlock(start.key)
     const endBlock = this.getBlock(end.key)
     const parent = this.getParent(startBlock)
 
