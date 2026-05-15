@@ -1320,17 +1320,18 @@ h1, h2, h3, h4, h5, h6 {
 
 .ag-fold-icon {
   position: absolute;
-  left: 0;
-  top: 0.1em;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
-  font-size: 10px;
-  color: var(--editorColor50);
+  font-size: 9px;
+  color: var(--editorColor);
   user-select: none;
-  width: 16px;
+  width: 14px;
   text-align: center;
   opacity: 0;
   transition: opacity 0.15s;
-  line-height: 1.6;
+  line-height: 1;
 }
 
 /* 鼠标移到标题行才显示图标 */

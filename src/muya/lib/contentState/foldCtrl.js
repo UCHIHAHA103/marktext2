@@ -1,17 +1,34 @@
+// foldCtrl.js - 标题折叠功能（#1869）
+
+// 日志写入工具（写到本地文件，AI 可直接读取）
+let _foldLogger = null
+try {
+  const _path = require('path')
+  const _os   = require('os')
+  const _fs   = require('fs')
+  const _logFile = _path.join(_os.homedir(), 'marktext-fold.log')
+  // 在首次加载时写入会话开始标记
+  _fs.appendFileSync(_logFile, \n===== marktext 启动  =====\n, 'utf8')
+  _foldLogger = (msg) => {
+    try { _fs.appendFileSync(_logFile, [] \n, 'utf8') } catch (e) {}
+    console.log('[FOLD]', msg)
+  }
+} catch (e) {
+  _foldLogger = (msg) => console.log('[FOLD]', msg)
+}
+
 const foldCtrl = (ContentState) => {
   /**
-   * 遍历根级 blocks，设置以下标记：
+   * 遍历所有 blocks，为每个 block 设置：
    *   block.hiddenByFold      {boolean} - 该 block 应被折叠隐藏
-   *   block.hasFoldableContent {boolean} - 该标题下方有可折叠内容（仅标题 block 有效）
+   *   block.hasFoldableContent {boolean} - 该标题行有可折叠内容
    *
-   * 状态机：用 hidingUntilLevel 追踪"当前被折叠的标题层级"。
-   * 遇到同级或更高级标题时停止隐藏，再判断新标题自身是否折叠。
+   * 关键修复：子标题行（如 h2 在折叠 h1 内部）也必须隐藏
    */
   ContentState.prototype.markFoldedBlocks = function() {
-    const foldedBlocks = this.blocks.filter(b => b.folded).length
-    const totalBlocks = this.blocks.length
-    console.log('[FOLD] markFoldedBlocks start', { total: totalBlocks, foldedHeadings: foldedBlocks })
     let hidingUntilLevel = null
+    let hiddenCount = 0
+    let foldedCount = this.blocks.filter(b => b.folded).length
 
     for (const block of this.blocks) {
       block.hiddenByFold = false
@@ -20,85 +37,86 @@ const foldCtrl = (ContentState) => {
       if (/^h[1-6]$/.test(block.type)) {
         const level = parseInt(block.type.slice(1))
 
-        // 遇到同级或更高级标题，结束上一段隐藏区
-        if (hidingUntilLevel !== null && level <= hidingUntilLevel) {
-          hidingUntilLevel = null
+        if (hidingUntilLevel !== null) {
+          if (level <= hidingUntilLevel) {
+            // 遇到同级或更高级标题 → 停止隐藏
+            hidingUntilLevel = null
+          } else {
+            // 关键修复：子标题在折叠区域内，也要隐藏
+            block.hiddenByFold = true
+            hiddenCount++
+          }
         }
 
-        // 若此标题本身折叠，开启新的隐藏区
-        if (block.folded) {
+        // 如果该标题自身已折叠（且未被上级折叠隐藏），设置隐藏级别
+        if (!block.hiddenByFold && block.folded) {
           hidingUntilLevel = level
-          // hasFoldableContent 暂标 true，最终由后续循环确认（有实际内容才真正显示图标）
           block.hasFoldableContent = true
         }
-      } else if (hidingUntilLevel !== null) {
-        block.hiddenByFold = true
+      } else {
+        // 非标题 block
+        if (hidingUntilLevel !== null) {
+          block.hiddenByFold = true
+          hiddenCount++
+        }
       }
     }
 
-    // 第二轮：修正 hasFoldableContent。
-    // 若一个折叠标题后面紧跟的全是被隐藏的内容（hiddenByFold true），则确认有可折叠内容。
-    // 若折叠标题后面没有任何 block，或直接跟着同级/更高级标题，则取消图标。
+    // 第二遍：为未折叠的标题检测是否有可折叠内容
     for (let i = 0; i < this.blocks.length; i++) {
       const block = this.blocks[i]
-      if (!block.folded && !/^h[1-6]$/.test(block.type)) continue
-
-      if (/^h[1-6]$/.test(block.type) && !block.folded) {
-        // 未折叠的标题：检查后面是否有内容，决定是否显示折叠图标
-        const level = parseInt(block.type.slice(1))
-        let hasContent = false
-        for (let j = i + 1; j < this.blocks.length; j++) {
-          const next = this.blocks[j]
-          if (/^h[1-6]$/.test(next.type) && parseInt(next.type.slice(1)) <= level) break
-          hasContent = true
-          break
-        }
-        block.hasFoldableContent = hasContent
+      if (!/^h[1-6]$/.test(block.type) || block.folded || block.hiddenByFold) continue
+      const level = parseInt(block.type.slice(1))
+      let hasContent = false
+      for (let j = i + 1; j < this.blocks.length; j++) {
+        const next = this.blocks[j]
+        if (/^h[1-6]$/.test(next.type) && parseInt(next.type.slice(1)) <= level) break
+        hasContent = true
+        break
       }
-      // 折叠标题的 hasFoldableContent 已在第一轮正确标记
+      block.hasFoldableContent = hasContent
     }
+
+    _foldLogger(markFoldedBlocks: total= folded= hidden=)
   }
 
   /**
    * 折叠/展开指定标题 block。
-   * 折叠时若 cursor 在将被隐藏的区域内，自动移到标题行末尾。
+   * 折叠时若 cursor 在被隐藏的 block 中，自动移到标题行末尾。
    */
   ContentState.prototype.toggleFold = function(headingKey) {
-    console.log('[FOLD] toggleFold called', headingKey)
+    _foldLogger(	oggleFold: key=)
     const headingBlock = this.getBlock(headingKey)
-    if (!headingBlock || !/^h[1-6]$/.test(headingBlock.type)) return
+    if (!headingBlock || !/^h[1-6]$/.test(headingBlock.type)) {
+      _foldLogger(	oggleFold: block not found or not a heading)
+      return
+    }
 
     const willFold = !headingBlock.folded
     headingBlock.folded = willFold
-    console.log('[FOLD] heading folded state set', { key: headingKey, type: headingBlock.type, folded: willFold })
+    _foldLogger(	oggleFold:  folded=)
 
     if (willFold && this.cursor) {
-      // 判断 cursor 所在 block 是否将被隐藏
       const cursorKey = this.cursor.start.key
       const cursorBlock = this.getBlock(cursorKey)
       if (cursorBlock) {
         const outmost = this.findOutMostBlock(cursorBlock)
         if (outmost) {
-          // 临时跑一次 markFoldedBlocks 看 outmost 是否会被隐藏
           this.markFoldedBlocks()
           if (outmost.hiddenByFold) {
-            // 将 cursor 移到标题行（heading 的第一个叶子 span）末尾
             const headingLine = headingBlock.children && headingBlock.children[0]
             if (headingLine) {
               const lineKey = headingLine.key
               const offset = headingLine.text ? headingLine.text.length : 0
-              this.cursor = {
-                start: { key: lineKey, offset },
-                end: { key: lineKey, offset },
-                isEdit: false
-              }
+              this.cursor = { start: { key: lineKey, offset }, end: { key: lineKey, offset }, isEdit: false }
+              _foldLogger(	oggleFold: cursor moved to heading line)
             }
           }
         }
       }
     }
 
-    console.log('[FOLD] calling render after fold toggle')
+    _foldLogger(	oggleFold: calling render)
     this.render()
   }
 }
