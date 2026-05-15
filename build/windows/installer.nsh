@@ -1,33 +1,21 @@
 ; installer.nsh — included via electron-builder's nsis.include
-;
-; 文件关联询问在安装初始化阶段（界面出现前）完成，
-; 避免在文件复制中途打断用户。
+; 使用 NSIS 预定义寄存器 $R9 存储文件关联选择，避免 Var 声明警告
 
 ;======================================================================
-; customHeader: 声明全局变量
-!macro customHeader
-  Var AssociateMd
-!macroend
-
-;======================================================================
-; customInit: 安装初始化阶段（第一个页面出现之前）询问
+; customInit: 安装初始化阶段（第一个页面出现之前）询问文件关联
 !macro customInit
-  StrCpy $AssociateMd "0"
+  StrCpy $R9 "0"
   MessageBox MB_YESNO|MB_ICONQUESTION \
     "Do you want to associate Markdown files (.md, .markdown, .mmd, .mdown, .mdtext, .mdx) with MarkText?" \
-    /SD IDNO IDYES AssocYes IDNO AssocNo
-  AssocYes:
-    StrCpy $AssociateMd "1"
-    Goto AssocDone
-  AssocNo:
-    StrCpy $AssociateMd "0"
-  AssocDone:
+    /SD IDNO IDNO SkipAssocInit
+  StrCpy $R9 "1"
+  SkipAssocInit:
 !macroend
 
 ;======================================================================
 ; customInstall: 文件复制完成后，根据用户选择写注册表
 !macro customInstall
-  ${If} $AssociateMd == "1"
+  ${If} $R9 == "1"
     WriteRegStr HKCU "Software\Classes\.md"       "" "MarkText.Document"
     WriteRegStr HKCU "Software\Classes\.markdown" "" "MarkText.Document"
     WriteRegStr HKCU "Software\Classes\.mmd"      "" "MarkText.Document"
