@@ -15,7 +15,8 @@ test.describe('Test XSS Vulnerabilities', async () => {
   })
 
   test.afterAll(async () => {
-    await app.close()
+    // contextIsolation 鍚敤鍚?app.close() 浼氱瓑寰?IPC 鍝嶅簲瀵艰嚧瓒呮椂锛岀洿鎺ュ己鍒堕€€鍑?
+    await app.evaluate(({ app }) => app.exit(0)).catch(() => {})
   })
 
   test('Load malicious document', async () => {
