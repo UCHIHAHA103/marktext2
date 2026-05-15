@@ -1344,39 +1344,49 @@ i.ag-footnote-backlink {
 }
 
 /* #1869: 标题折叠图标 */
+/* heading 改为 flex 容器，折叠图标作为 flex item 始终在 heading 悬停区内，
+   解决"鼠标移向图标时 heading:hover 消失→图标变透明→无法点击"问题 */
 [data-head] {
   position: relative;
-}
-.ag-fold-icon {
-  position: absolute;
-  /* 紧贴 ag-front-icon 右侧（ag-front-icon 约占 -35px~-11px，此处取 -12px 留 1px 间距） */
-  left: -12px;
-  /* top:0 与 ag-front-icon 对齐（ag-front-icon 也无 top 偏移，默认 top:0） */
-  top: 0;
-  bottom: 0;
   display: flex;
   align-items: center;
+}
+/* p.ag-atx-line 作为 flex item 要占满剩余宽度 */
+[data-head] > p {
+  flex: 1;
+  min-width: 0;
+}
+.ag-fold-icon {
+  /* 不再使用 position:absolute，作为 flex item 在 heading 内 */
+  flex-shrink: 0;
+  order: -1; /* 在所有 flex item 前面，但 ag-front-icon 是 absolute 不参与 flex */
   cursor: pointer;
   font-size: 10px;
-  /* 强制使用编辑器文字色，避免 ag-active 等状态把图标染蓝 */
-  color: var(--editorColor) !important;
+  /* 强制深灰色，不受主题/ag-active 染色影响 */
+  color: #555 !important;
   opacity: 0;
   user-select: none;
   -webkit-user-select: none;
-  /* 取消 Chromium/Electron 点击时的蓝色高亮 */
   -webkit-tap-highlight-color: transparent;
   outline: none;
-  width: 12px;
-  text-align: center;
-  transition: opacity 0.1s ease;
-  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+  transition: opacity 0.15s ease;
   line-height: 1;
 }
 [data-head]:hover .ag-fold-icon {
-  opacity: 0.5;
+  opacity: 0.45;
+}
+.ag-fold-icon:hover {
+  /* 鼠标直接悬停在图标上时也显示（防止 heading:hover 刚好失效） */
+  opacity: 0.8 !important;
 }
 [data-head]:hover .ag-fold-icon:hover {
-  opacity: 1;
+  opacity: 1 !important;
 }
 .ag-hidden-by-fold {
   display: none !important;
