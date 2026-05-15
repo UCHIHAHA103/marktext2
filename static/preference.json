@@ -1,6 +1,7 @@
 ﻿{
   "autoSave": false,
   "confirmOnExit": true,
+  "defaultEditMode": "edit",
   "autoSaveDelay": 5000,
   "titleBarStyle": "custom",
   "openFilesInNewWindow": false,

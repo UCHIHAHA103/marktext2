@@ -86,6 +86,16 @@
         >
           <span class="text-center-vertical">{{ `Sel: ${selectedWordCount}` }}</span>
         </div>
+        <!-- #2451: 阅读/编辑模式切换按钮 -->
+        <div
+          v-if="pathname"
+          class="read-only-toggle title-no-drag"
+          :class="{ 'is-read-only': isReadOnly }"
+          :title="isReadOnly ? '切换到编辑模式' : '切换到阅读模式'"
+          @click.stop="emit('toggle-read-only')"
+        >
+          <span class="text-center-vertical">{{ isReadOnly ? '👁' : '✏️' }}</span>
+        </div>
       </div>
       <div
         v-if="titleBarStyle === 'custom' && !isFullScreen && !isOsx"
@@ -163,8 +173,11 @@ const props = defineProps({
   wordCount: Object,
   selectedWordCount: { type: Number, default: null }, // #2791
   platform: String,
-  isSaved: Boolean
+  isSaved: Boolean,
+  isReadOnly: { type: Boolean, default: false } // #2451
 })
+
+const emit = defineEmits(['toggle-read-only'])
 
 const preferencesStore = usePreferencesStore()
 const layoutStore = useLayoutStore()
@@ -403,6 +416,26 @@ div.title > span {
   & .item {
     margin-right: 10px;
   }
+}
+
+/* #2451: 阅读/编辑模式切换按钮 */
+.read-only-toggle {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--editorColor30);
+  text-align: center;
+  line-height: 24px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+.read-only-toggle:hover {
+  color: var(--editorColor);
+}
+.read-only-toggle.is-read-only {
+  color: var(--highlightColor, #3aa2e2);
+  opacity: 0.85;
 }
 
 .word-count {

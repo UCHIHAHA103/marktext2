@@ -460,6 +460,16 @@ class Muya {
     if (options.t && this.i18nCSS) {
       this.i18nCSS.setTranslationFunction(options.t)
     }
+
+    // #2451: 动态切换阅读/编辑模式
+    if (typeof options.readOnly !== 'undefined') {
+      this.container.setAttribute('contenteditable', !options.readOnly)
+      if (options.readOnly) {
+        this.container.classList.add('ag-read-only')
+      } else {
+        this.container.classList.remove('ag-read-only')
+      }
+    }
   }
 
   hideAllFloatTools() {
@@ -528,7 +538,8 @@ function getContainer(originContainer, options) {
     container.classList.add('ag-show-quick-insert-hint')
   }
 
-  container.setAttribute('contenteditable', true)
+  // #2451: readOnly 模式下 contenteditable=false，禁止键盘编辑
+  container.setAttribute('contenteditable', !options.readOnly)
   container.setAttribute('autocorrect', false)
   container.setAttribute('autocomplete', 'off')
   // NOTE: The browser is not able to correct misspelled words words without

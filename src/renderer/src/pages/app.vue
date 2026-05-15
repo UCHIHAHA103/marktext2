@@ -12,6 +12,8 @@
         :selected-word-count="selectedWordCount"
         :platform="platform"
         :is-saved="isSaved"
+        :is-read-only="isReadOnly"
+        @toggle-read-only="toggleReadOnly"
       />
 
       <div
@@ -82,7 +84,7 @@ const timer = ref(null)
 // States from Pini
 const { windowActive, platform, init } = storeToRefs(mainStore)
 const { showTabBar } = storeToRefs(layoutStore)
-const { sourceCode, theme, customCss, textDirection, zoom } = storeToRefs(preferencesStore)
+const { sourceCode, theme, customCss, textDirection, zoom, isReadOnly } = storeToRefs(preferencesStore)
 const { projectTree } = storeToRefs(projectStore)
 const { currentFile } = storeToRefs(editorStore)
 
@@ -93,6 +95,11 @@ const markdown = computed(() => currentFile.value?.markdown)
 const cursor = computed(() => currentFile.value?.cursor)
 const wordCount = computed(() => currentFile.value?.wordCount)
 const selectedWordCount = computed(() => currentFile.value?.selectedWordCount ?? null) // #2791
+
+// #2451: 切换阅读/编辑模式
+const toggleReadOnly = () => {
+  bus.emit('toggle-read-only')
+}
 const muyaIndexCursor = computed(() => currentFile.value?.muyaIndexCursor)
 
 const hasCurrentFile = computed(() => {

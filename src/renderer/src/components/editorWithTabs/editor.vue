@@ -187,7 +187,11 @@ const {
   // Edit modes
   typewriter,
   focus,
-  sourceCode
+  sourceCode,
+
+  // #2451: 默认编辑/阅读模式（运行时状态来自 store）
+  defaultEditMode,
+  isReadOnly
 } = storeToRefs(preferencesStore)
 
 // Editor store refs
@@ -229,6 +233,13 @@ watch(typewriter, (value) => {
 watch(focus, (value) => {
   if (editor.value) {
     editor.value.setFocusMode(value)
+  }
+})
+
+// #2451: 监听阅读/编辑状态变化，实时更新 muya
+watch(isReadOnly, (value) => {
+  if (editor.value) {
+    editor.value.setOptions({ readOnly: value })
   }
 })
 
@@ -1058,7 +1069,8 @@ onMounted(() => {
     imagePathPicker,
     clipboardFilePath: guessClipboardFilePath,
     imagePathAutoComplete,
-    t // Add the translation function
+    t, // Add the translation function
+    readOnly: isReadOnly.value // #2451
   }
 
   if (/dark/i.test(theme.value)) {
@@ -1073,12 +1085,21 @@ onMounted(() => {
     })
   }
 
+  // #2451: 根据 defaultEditMode 偏好设置初始阅读/编辑状态
+  if (defaultEditMode.value === 'read') {
+    preferencesStore.SET_MODE({ type: 'isReadOnly', checked: true })
+  }
+
   editor.value = new Muya(ele, options)
 
   const { container } = editor.value
 
   // Listen for language changes and update Muya's translation function
   bus.on('language-changed', handleLanguageChanged)
+  // #2451: 接收阅读/编辑模式切换事件
+  bus.on('toggle-read-only', () => {
+    preferencesStore.TOGGLE_VIEW_MODE('isReadOnly')
+  })
 
   // Create spell check wrapper and enable spell checking if preferred.
   spellchecker = new SpellChecker(spellcheckerEnabled.value, spellcheckerLanguage.value)

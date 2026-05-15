@@ -1319,6 +1319,20 @@ i.ag-footnote-backlink {
   padding-bottom: 30vh;
 }
 
+/* #2451: 阅读模式 — 鼠标变默认箭头，隐藏编辑光标，浮动菜单不显示 */
+.ag-read-only {
+  cursor: default !important;
+  caret-color: transparent;
+}
+.ag-read-only * {
+  cursor: default !important;
+}
+.ag-read-only .ag-front-menu,
+.ag-read-only .ag-quick-insert,
+.ag-read-only .ag-format-picker {
+  display: none !important;
+}
+
 /* #3764: GitHub Alerts 样式 */
 .ag-github-alert {
   border-left: 4px solid;

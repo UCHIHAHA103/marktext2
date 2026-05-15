@@ -90,6 +90,7 @@ export const usePreferencesStore = defineStore('preferences', {
     typewriter: false, // typewriter mode
     focus: false, // focus mode
     sourceCode: false, // source code mode
+    isReadOnly: false, // #2451: 阅读模式（运行时状态，不持久化）
 
     // user configration
     imageFolderPath: '',
