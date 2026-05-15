@@ -1025,6 +1025,16 @@ const handleLanguageChanged = () => {
 const resizeObserverForEditor = new ResizeObserver(handleResetPaddingBottom)
 
 onMounted(() => {
+  // 早期日志：在任何可能崩溃的代码之前记录状态
+  try {
+    console.log('[MT] onMounted START', {
+      isReadOnlyRef: typeof isReadOnly,
+      isReadOnlyVal: String(isReadOnly?.value),
+      defaultEditModeRef: typeof defaultEditMode,
+      defaultEditModeVal: String(defaultEditMode?.value),
+      prefKeys: Object.keys(preferencesStore.\).filter(k => k.includes('edit') || k.includes('Read') || k.includes('Mode')),
+    })
+  } catch(e) { console.error('[MT] onMounted early log failed:', e) }
   printer = new Printer()
   const ele = editorRef.value
 
@@ -1094,7 +1104,7 @@ onMounted(() => {
   }
 
   // #2451: 根据 defaultEditMode 偏好设置初始阅读/编辑状态
-  if (defaultEditMode.value === 'read') {
+  if (defaultEditMode?.value === 'read') {
     preferencesStore.SET_MODE({ type: 'isReadOnly', checked: true })
   }
 
