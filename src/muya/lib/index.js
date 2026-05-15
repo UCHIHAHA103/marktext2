@@ -133,6 +133,7 @@ class Muya {
   }
 
   dispatchSelectionChange = (cursor) => {
+    if (this.container && this.container.getAttribute('contenteditable') === 'false') return
     const selectionChanges = this.contentState.selectionChange(cursor)
 
     if (!this.container) return
