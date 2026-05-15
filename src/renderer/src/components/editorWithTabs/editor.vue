@@ -751,7 +751,10 @@ const scrollToCords = (y) => {
   const maxScrollHeight = container.scrollHeight - container.clientHeight // max scroll height is actually calculated as such
   if (y > maxScrollHeight) {
     const editorId = container.firstElementChild
-    editorId.style.paddingBottom = `${y - maxScrollHeight + 100}px` // 100px is the default ag-editor-id padding
+    // 只追加需要的额外 padding，不覆盖 CSS 规则（避免 #1119 的 padding-bottom:30vh 被清零后导致空白）
+    const existingPadding = parseFloat(getComputedStyle(editorId).paddingBottom) || 0
+    const extraNeeded = y - maxScrollHeight + 100
+    editorId.style.paddingBottom = `${Math.max(extraNeeded, existingPadding)}px`
     // attach a resize observer so we know when to remove the padding when it is of the "correct" height
     resizeObserverForEditor.observe(editorId)
   }
@@ -998,7 +1001,7 @@ const handleResetPaddingBottom = () => {
     parseFloat(container.firstElementChild.style.paddingBottom)
 
   if (newScollableHeightWithoutPadding > currentFile.value.scrollTop) {
-    container.style.paddingBottom = ''
+    container.firstElementChild.style.paddingBottom = '' // 清除内联样式，恢复 CSS 规则（#1119 的 padding-bottom:30vh）
     resizeObserverForEditor.unobserve(container.firstElementChild) // unobserve #ag-editor-id since we have removed the padding
   }
 }

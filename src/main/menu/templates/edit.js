@@ -158,7 +158,8 @@ export default function(keybindings) {
         }
       },
       {
-        type: 'separator'
+        type: 'separator',
+        visible: isOsx  // 截图与行结束符分隔，仅 macOS 需要
       },
       {
         // TODO: Remove this menu entry and add it to the command palette (#1408).
