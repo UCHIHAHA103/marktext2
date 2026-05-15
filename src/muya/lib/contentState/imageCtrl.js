@@ -2,6 +2,16 @@ import { URL_REG, DATA_URL_REG } from '../config'
 import { correctImageSrc } from '../utils/getImageInfo'
 import { fileURLToPath } from 'url'
 
+// 转义 HTML 属性值中的特殊字符，防止 XSS/注入攻击（PR #4206）
+const escapeHtmlAttr = (str) => {
+  if (typeof str !== 'string') return str
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 const imageCtrl = (ContentState) => {
   /**
    * insert inline image at the cursor position.
@@ -117,7 +127,7 @@ const imageCtrl = (ContentState) => {
       if (value && attr === 'src') {
         value = correctImageSrc(value)
       }
-      imageText += `${attr}="${value}" `
+      imageText += `${escapeHtmlAttr(attr)}="${escapeHtmlAttr(value)}" `
     }
     imageText = imageText.trim()
     imageText += '>'
@@ -163,7 +173,7 @@ const imageCtrl = (ContentState) => {
         if (value && attr === 'src') {
           value = correctImageSrc(value)
         }
-        imageText += `${attr}="${value}" `
+        imageText += `${escapeHtmlAttr(attr)}="${escapeHtmlAttr(value)}" `
       }
       imageText = imageText.trim()
       imageText += '>'

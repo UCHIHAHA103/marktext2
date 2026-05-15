@@ -1087,6 +1087,8 @@ export const useEditorStore = defineStore('editor', {
 
       const { markdown, isMixedLineEndings } = markdownDocument
       const docState = createDocumentState(Object.assign(markdownDocument, options))
+      // PR #4146: 忽略打开文件后 Muya 的首次序列化（防止与磁盘差异导致误报未保存）
+      docState.ignoreNextContentChangeForSaveStatus = true
       const { id, cursor } = docState
 
       if (selected) {
@@ -1178,6 +1180,13 @@ export const useEditorStore = defineStore('editor', {
       if (id === this.currentFile.id && toc && !equal(toc, this.listToc)) {
         this.listToc = toc
         this.toc = listToTree(toc)
+      }
+
+      // PR #4146: 跳过打开文件后 Muya 的首次序列化（防止与磁盘差异导致误报未保存）
+      if (tab.ignoreNextContentChangeForSaveStatus) {
+        tab.ignoreNextContentChangeForSaveStatus = false
+        debouncedSendBufferedState()
+        return
       }
 
       if (
@@ -1403,18 +1412,31 @@ export const useEditorStore = defineStore('editor', {
                 }
               }
 
-              tab.isSaved = false
-              this.pushTabNotification({
-                tabId: id,
-                msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
-                showConfirm: true,
-                exclusiveType: 'file_changed',
-                action: (status) => {
-                  if (status) {
-                    this.loadChange(change)
+              // PR #4075: 文件已保存时静默加载外部变更，不触发未保存状态
+              if (isSaved) {
+                this.loadChange(change)
+                this.pushTabNotification({
+                  tabId: id,
+                  msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
+                  showConfirm: false,
+                  exclusiveType: 'file_changed',
+                  style: 'info'
+                })
+              } else {
+                // 有本地未保存改动时，询问用户是否重新加载
+                tab.isSaved = false
+                this.pushTabNotification({
+                  tabId: id,
+                  msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
+                  showConfirm: true,
+                  exclusiveType: 'file_changed',
+                  action: (status) => {
+                    if (status) {
+                      this.loadChange(change)
+                    }
                   }
-                }
-              })
+                })
+              }
               debouncedSendBufferedState()
               break
             }
