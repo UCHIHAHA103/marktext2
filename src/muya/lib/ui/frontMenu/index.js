@@ -120,7 +120,12 @@ class FrontMenu extends BaseFloat {
   render() {
     const { oldVnode, frontMenuContainer, outmostBlock, startBlock, endBlock } = this
     const { type, functionType } = outmostBlock
-    const children = this.menu.map(({ icon, label, text, shortCut }) => {
+    // 每次渲染时实时调用 createMenu/createGetLabel/createGetSubMenu，
+    // 确保语言切换后立即生效（而不是使用构造器里缓存的翻译结果）
+    const currentMenu = createMenu(this.t)
+    this.getLabel = createGetLabel(this.t)
+    this.getSubMenu = createGetSubMenu(this.t)
+    const children = currentMenu.map(({ icon, label, text, shortCut }) => {
       const subMenu = this.getSubMenu(outmostBlock, startBlock, endBlock)
       const iconWrapperSelector = 'div.icon-wrapper'
       const iconWrapper = h(

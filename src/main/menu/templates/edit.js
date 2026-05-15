@@ -145,7 +145,8 @@ export default function(keybindings) {
         }
       },
       {
-        type: 'separator'
+        type: 'separator',
+        visible: isOsx  // 截图功能仅 macOS，分割线也一并隐藏
       },
       {
         label: t('menu.edit.screenshot'),
