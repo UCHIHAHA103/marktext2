@@ -1335,3 +1335,13 @@ h1, h2, h3, h4, h5, h6 {
 .ag-hidden-by-fold {
   display: none !important;
 }
+
+/* 只读/预览模式增强：隐藏编辑工具，内联规则禁止交互 */
+.ag-read-only .ag-format-picker,
+.ag-read-only .ag-link-tools,
+.ag-read-only .ag-image-toolbar,
+.ag-read-only .ag-table-bar,
+.ag-read-only .ag-quick-insert {
+  display: none !important;
+}
+.ag-read-only .ag-inline-rule { pointer-events: none; }
