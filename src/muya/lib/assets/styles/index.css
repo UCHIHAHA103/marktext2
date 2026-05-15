@@ -1312,15 +1312,35 @@ i.ag-footnote-backlink {
 }
 
 /* #1869: 标题折叠 */
+/* #1869: 折叠图标 - 绝对定位在标题行左侧，hover 时显示 */
+h1, h2, h3, h4, h5, h6 {
+  position: relative;
+  padding-left: 20px;
+}
+
 .ag-fold-icon {
+  position: absolute;
+  left: 0;
+  top: 0.1em;
   cursor: pointer;
   font-size: 10px;
-  color: var(--editorColor30);
-  margin-right: 4px;
+  color: var(--editorColor50);
   user-select: none;
-  display: inline-block;
-  width: 12px;
-  line-height: 1;
+  width: 16px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  line-height: 1.6;
+}
+
+/* 鼠标移到标题行才显示图标 */
+h1:hover > .ag-fold-icon,
+h2:hover > .ag-fold-icon,
+h3:hover > .ag-fold-icon,
+h4:hover > .ag-fold-icon,
+h5:hover > .ag-fold-icon,
+h6:hover > .ag-fold-icon {
+  opacity: 1;
 }
 
 .ag-fold-icon:hover {

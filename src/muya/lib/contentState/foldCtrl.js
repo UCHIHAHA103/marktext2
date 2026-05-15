@@ -8,6 +8,9 @@ const foldCtrl = (ContentState) => {
    * 遇到同级或更高级标题时停止隐藏，再判断新标题自身是否折叠。
    */
   ContentState.prototype.markFoldedBlocks = function() {
+    const foldedBlocks = this.blocks.filter(b => b.folded).length
+    const totalBlocks = this.blocks.length
+    console.log('[FOLD] markFoldedBlocks start', { total: totalBlocks, foldedHeadings: foldedBlocks })
     let hidingUntilLevel = null
 
     for (const block of this.blocks) {
@@ -61,11 +64,13 @@ const foldCtrl = (ContentState) => {
    * 折叠时若 cursor 在将被隐藏的区域内，自动移到标题行末尾。
    */
   ContentState.prototype.toggleFold = function(headingKey) {
+    console.log('[FOLD] toggleFold called', headingKey)
     const headingBlock = this.getBlock(headingKey)
     if (!headingBlock || !/^h[1-6]$/.test(headingBlock.type)) return
 
     const willFold = !headingBlock.folded
     headingBlock.folded = willFold
+    console.log('[FOLD] heading folded state set', { key: headingKey, type: headingBlock.type, folded: willFold })
 
     if (willFold && this.cursor) {
       // 判断 cursor 所在 block 是否将被隐藏
@@ -93,6 +98,7 @@ const foldCtrl = (ContentState) => {
       }
     }
 
+    console.log('[FOLD] calling render after fold toggle')
     this.render()
   }
 }
