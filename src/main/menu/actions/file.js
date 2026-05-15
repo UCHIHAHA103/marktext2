@@ -172,27 +172,28 @@ const showUnsavedFilesMessage = async(win, files) => {
     return { needSave: false }
   }
 
-  const { response } = await dialog.showMessageBox(win, {
-    type: 'question',
-    buttons: [t('dialog.save'), t('dialog.dontSave'), t('dialog.cancel')],
-    defaultId: 0,
-    message: t('dialog.saveChanges', {
-      count: files.length,
-      type: files.length === 1 ? t('dialog.file') : t('dialog.files'),
-      files: files.map((f) => f.filename).join('\n')
-    }),
-    detail: t('dialog.changesWillBeLost'),
-    cancelId: 2,
-    noLink: true
+  // 使用渲染进程自定义对话框，替代原生系统弹窗
+  const reqId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  win.webContents.send('mt::show-save-dialog', {
+    files: files.map((f) => f.filename),
+    reqId
+  })
+
+  const response = await new Promise((resolve) => {
+    const cleanup = setTimeout(() => {
+      ipcMain.removeAllListeners(`mt::save-dialog-response-${reqId}`)
+      resolve(2) // 超时视为取消
+    }, 300000)
+
+    ipcMain.once(`mt::save-dialog-response-${reqId}`, (_, answer) => {
+      clearTimeout(cleanup)
+      resolve(answer)
+    })
   })
 
   switch (response) {
     case 0:
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve({ needSave: true })
-        })
-      })
+      return new Promise((resolve) => setTimeout(() => resolve({ needSave: true })))
     case 1:
       return { needSave: false }
     default:

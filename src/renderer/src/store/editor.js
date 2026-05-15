@@ -471,6 +471,11 @@ export const useEditorStore = defineStore('editor', {
     LISTEN_FOR_CLOSE() {
       const projectStore = useProjectStore()
       const preferencesStore = usePreferencesStore()
+      // #custom-dialog: 主进程请求显示自定义保存确认对话框
+      window.electron.ipcRenderer.on('mt::show-save-dialog', (_, { files, reqId }) => {
+        bus.emit('show-save-dialog', { files, reqId })
+      })
+
       window.electron.ipcRenderer.on('mt::ask-for-close', () => {
         sendBufferedState()
           .catch((err) => {

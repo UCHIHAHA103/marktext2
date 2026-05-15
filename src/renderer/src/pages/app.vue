@@ -37,6 +37,7 @@
       <rename />
       <tweet />
       <import-modal />
+      <save-confirm-dialog />
     </div>
   </div>
 </template>
@@ -56,6 +57,7 @@ import ExportSettingDialog from '@/components/exportSettings'
 import Rename from '@/components/rename'
 import Tweet from '@/components/tweet'
 import ImportModal from '@/components/import'
+import SaveConfirmDialog from '@/components/saveConfirmDialog'
 import bus from '@/bus'
 import { DEFAULT_STYLE } from '@/config'
 import { useTweetStore } from '@/store/tweet'

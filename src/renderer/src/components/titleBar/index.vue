@@ -68,7 +68,7 @@
             <div class="title-item">
               <span class="front">{{ t('menu.counter.paragraphs') }}:</span><span class="text">{{ wordCount['paragraph'] }}</span>
             </div>
-            <div v-if="selectedWordCount" class="title-item" style="color: var(--activeLinkColor, #d03050); margin-top: 4px;">
+            <div v-if="selectedWordCount" class="title-item" style="margin-top: 4px;">
               <span class="front">已选字数:</span><span class="text">{{ selectedWordCount }}</span>
             </div>
           </template>
