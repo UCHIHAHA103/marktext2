@@ -1153,9 +1153,6 @@ span.ag-reference-link {
   position: absolute;
   border-radius: 4px;
   left: -35px;
-  /* heading 改为 flex 后文字行垂直居中，front-icon 也跟着居中 */
-  top: 50%;
-  transform: translateY(-50%);
   display: none;
   cursor: pointer;
   z-index: 99999;
@@ -1349,25 +1346,22 @@ i.ag-footnote-backlink {
 }
 
 /* #1869: 标题折叠图标 */
-/* heading 改为 flex 容器，折叠图标作为 flex item 始终在 heading 悬停区内，
-   解决"鼠标移向图标时 heading:hover 消失→图标变透明→无法点击"问题 */
 [data-head] {
   position: relative;
-  display: flex;
-  align-items: center;
 }
-/* p.ag-atx-line 作为 flex item 要占满剩余宽度 */
+/* 把 heading 内的文字 p 改为 inline，使折叠图标与标题文字在同一行显示
+   （原来 p 是 block，折叠图标会换行到文字上方）*/
 [data-head] > p {
-  flex: 1;
-  min-width: 0;
+  display: inline;
 }
 .ag-fold-icon {
-  /* 不再使用 position:absolute，作为 flex item 在 heading 内 */
-  flex-shrink: 0;
-  order: -1; /* 在所有 flex item 前面，但 ag-front-icon 是 absolute 不参与 flex */
+  /* inline-block：在 heading 内联流中，始终在 heading 悬停区内 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
   cursor: pointer;
   font-size: 10px;
-  /* 强制深灰色，不受主题/ag-active 染色影响 */
   color: #555 !important;
   opacity: 0;
   user-select: none;
@@ -1375,10 +1369,7 @@ i.ag-footnote-backlink {
   -webkit-tap-highlight-color: transparent;
   outline: none;
   width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 1.2em;
   margin-right: 2px;
   transition: opacity 0.15s ease;
   line-height: 1;
@@ -1387,7 +1378,6 @@ i.ag-footnote-backlink {
   opacity: 0.45;
 }
 .ag-fold-icon:hover {
-  /* 鼠标直接悬停在图标上时也显示（防止 heading:hover 刚好失效） */
   opacity: 0.8 !important;
 }
 [data-head]:hover .ag-fold-icon:hover {
