@@ -1349,13 +1349,13 @@ i.ag-footnote-backlink {
 [data-head] {
   position: relative;
 }
-/* 把 heading 内的文字 p 改为 inline，使折叠图标与标题文字在同一行显示
-   （原来 p 是 block，折叠图标会换行到文字上方）*/
-[data-head] > p {
-  display: inline;
+/* .ag-atx-line 默认 display:block，会把折叠图标推到上方。
+   heading 内直接子 ag-atx-line 改为 inline，使折叠图标与文字在同一行 */
+[data-head] > .ag-atx-line {
+  display: inline !important;
 }
 .ag-fold-icon {
-  /* inline-block：在 heading 内联流中，始终在 heading 悬停区内 */
+  /* inline-flex：在 heading 内联流中，与 ag-atx-line 同行，始终在 heading 悬停区 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
