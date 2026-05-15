@@ -13,6 +13,7 @@ class ClickEvent {
   contextClickBingding() {
     const { container, eventCenter, contentState } = this.muya
     const handler = (event) => {
+      if (container.getAttribute('contenteditable') === 'false') return // read-only: skip inline editing activation
       // Allow native context menu in MarkText.
       if (!global || !global.marktext) {
         // __MARKTEXT_PATCH__
