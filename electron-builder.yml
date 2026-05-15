@@ -101,7 +101,7 @@ nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   perMachine: false
-  include: windows/installer.nsh
+  include: build/windows/installer.nsh
 mac:
   artifactName: 'marktext-mac-${arch}-${version}.${ext}'
   entitlementsInherit: build/mac/entitlements.mac.plist
