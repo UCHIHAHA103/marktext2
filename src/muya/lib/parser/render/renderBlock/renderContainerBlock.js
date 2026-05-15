@@ -165,12 +165,12 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
         )
         // JS hover 替代 CSS :hover（更可靠）
         if (!data.on) data.on = {}
-        data.on.mouseover = (e) => {
-          const icon = e.currentTarget.querySelector('.ag-fold-icon')
+        data.on.mouseenter = (e) => {
+          const icon = e.target.closest && e.target.closest('h1,h2,h3,h4,h5,h6') ? e.target.closest('h1,h2,h3,h4,h5,h6').querySelector('.ag-fold-icon') : e.currentTarget.querySelector('.ag-fold-icon')
           if (icon) icon.style.opacity = '1'
         }
-        data.on.mouseout = (e) => {
-          const icon = e.currentTarget.querySelector('.ag-fold-icon')
+        data.on.mouseleave = (e) => {
+          const icon = e.target.closest && e.target.closest('h1,h2,h3,h4,h5,h6') ? e.target.closest('h1,h2,h3,h4,h5,h6').querySelector('.ag-fold-icon') : e.currentTarget.querySelector('.ag-fold-icon')
           if (icon) icon.style.opacity = '0'
         }
         children.unshift(foldIcon)
