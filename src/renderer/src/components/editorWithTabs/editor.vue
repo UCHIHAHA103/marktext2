@@ -761,6 +761,7 @@ const scrollToCords = (y) => {
   requestAnimationFrame(() => {
     if (!container) return
     // wait for the padding to be applied (if any)
+    console.log('[MT] scrollToCords RAF: restoring visibility, setting scrollTop to', y)
     container.style.visibility = 'visible'
     container.style.pointerEvents = 'auto'
     container.scrollTop = y
@@ -930,6 +931,7 @@ const handleDialogTableConfirm = () => {
 
 // listen for `open-single-file` event, it will call this method only when open a new file.
 const setMarkdownToEditor = ({ markdown: newMarkdown, cursor: newCursor }) => {
+  console.log('[MT] setMarkdownToEditor (file-loaded)', { editorReady: !!editor.value, markdownLen: newMarkdown?.length, hasCursor: !!newCursor })
   if (editor.value) {
     editor.value.clearHistory()
     if (newCursor) {
@@ -950,7 +952,11 @@ const handleFileChange = ({
   muyaIndexCursor,
   blocks = undefined
 }) => {
-  if (!editor.value) return
+  console.log('[MT] handleFileChange called', { editorReady: !!editor.value, hasMarkdown: typeof newMarkdown === 'string', markdownLen: newMarkdown?.length, renderCursor, scrollTop, hasCursor: !!newCursor, hasMuyaIndexCursor: !!muyaIndexCursor, hasBlocks: !!blocks, hasHistory: !!history })
+  if (!editor.value) {
+    console.warn('[MT] handleFileChange: editor not ready, ignoring event')
+    return
+  }
   const { container } = editor.value
 
   if (editor.value) {
@@ -965,10 +971,12 @@ const handleFileChange = ({
     }
 
     if (typeof scrollTop === 'number' && scrollTop > 0) {
+      console.log('[MT] scrolling to saved position', scrollTop, '- hiding container temporarily')
       container.style.visibility = 'hidden'
       container.style.pointerEvents = 'none'
       scrollToCords(scrollTop)
     } else {
+      console.log('[MT] no scroll needed, showing container. scrollTop:', scrollTop)
       container.style.visibility = 'visible'
       container.style.pointerEvents = 'auto'
       scrollToCursor(0)
@@ -1088,7 +1096,9 @@ onMounted(() => {
     preferencesStore.SET_MODE({ type: 'isReadOnly', checked: true })
   }
 
+  console.log('[MT] creating Muya editor', { readOnly: options.readOnly, markdownLen: options.markdown?.length })
   editor.value = new Muya(ele, options)
+  console.log('[MT] Muya editor created, container:', !!editor.value?.container)
 
   const { container } = editor.value
 
@@ -1111,6 +1121,7 @@ onMounted(() => {
   }
 
   // listen for bus events.
+  console.log('[MT] registering bus events: file-loaded, file-changed')
   bus.on('file-loaded', setMarkdownToEditor)
   bus.on('invalidate-image-cache', handleInvalidateImageCache)
   bus.on('undo', handleUndo)
