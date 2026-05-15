@@ -28,20 +28,33 @@ const foldCtrl = (ContentState) => {
       if (/^h[1-6]$/.test(block.type)) {
         const level = parseInt(block.type.slice(1))
 
-        // 遇到同级或更高级标题，结束上一段隐藏区
-        if (hidingUntilLevel !== null && level <= hidingUntilLevel) {
-          hidingUntilLevel = null
+        if (hidingUntilLevel !== null) {
+          if (level <= hidingUntilLevel) {
+            // 同级或更高级标题：结束当前折叠区，再判断自身是否开启新折叠区
+            hidingUntilLevel = null
+            if (block.folded) {
+              hidingUntilLevel = level
+              block.hasFoldableContent = true
+            }
+          } else {
+            // 子级标题（level > hidingUntilLevel）：仍在折叠区内，必须隐藏
+            block.hiddenByFold = true
+            hiddenCount++
+            // 注意：子标题自身的 folded 状态在被隐藏时不生效（外层已折叠）
+          }
+        } else {
+          // 不在任何折叠区：检查此标题是否自身折叠
+          if (block.folded) {
+            hidingUntilLevel = level
+            block.hasFoldableContent = true
+          }
         }
-
-        // 若此标题本身折叠，开启新的隐藏区
-        if (block.folded) {
-          hidingUntilLevel = level
-          // hasFoldableContent 暂标 true，最终由后续循环确认（有实际内容才真正显示图标）
-          block.hasFoldableContent = true
+      } else {
+        // 非标题 block
+        if (hidingUntilLevel !== null) {
+          block.hiddenByFold = true
+          hiddenCount++
         }
-      } else if (hidingUntilLevel !== null) {
-        block.hiddenByFold = true
-        hiddenCount++
       }
     }
     writeLog(`markFoldedBlocks: total=${this.blocks.length} hidden=${hiddenCount}`)

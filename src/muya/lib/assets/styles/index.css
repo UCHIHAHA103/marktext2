@@ -1344,24 +1344,33 @@ i.ag-footnote-backlink {
 }
 
 /* #1869: 标题折叠图标 */
-/* heading 需要 relative 定位，使图标能绝对定位在行内垂直居中位置 */
 [data-head] {
   position: relative;
 }
 .ag-fold-icon {
   position: absolute;
-  left: -18px;
-  top: 50%;
-  transform: translateY(-50%);
+  /* 紧贴 ag-front-icon 右侧（ag-front-icon 约占 -35px~-11px，此处取 -12px 留 1px 间距） */
+  left: -12px;
+  /* top:0 与 ag-front-icon 对齐（ag-front-icon 也无 top 偏移，默认 top:0） */
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
   cursor: pointer;
   font-size: 10px;
-  color: var(--editorColor);
+  /* 强制使用编辑器文字色，避免 ag-active 等状态把图标染蓝 */
+  color: var(--editorColor) !important;
   opacity: 0;
   user-select: none;
-  width: 14px;
+  -webkit-user-select: none;
+  /* 取消 Chromium/Electron 点击时的蓝色高亮 */
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  width: 12px;
   text-align: center;
   transition: opacity 0.1s ease;
   pointer-events: auto;
+  line-height: 1;
 }
 [data-head]:hover .ag-fold-icon {
   opacity: 0.5;
