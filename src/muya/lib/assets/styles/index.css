@@ -1334,18 +1334,24 @@ i.ag-footnote-backlink {
 }
 
 /* #1869: 标题折叠图标 */
+/* heading 需要 relative 定位，使图标能绝对定位在行内垂直居中位置 */
+[data-head] {
+  position: relative;
+}
 .ag-fold-icon {
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
   font-size: 10px;
   color: var(--editorColor);
   opacity: 0;
-  margin-right: 4px;
   user-select: none;
-  display: inline-block;
-  width: 12px;
-  line-height: 1;
+  width: 14px;
+  text-align: center;
   transition: opacity 0.1s ease;
-  vertical-align: middle;
+  pointer-events: auto;
 }
 [data-head]:hover .ag-fold-icon {
   opacity: 0.5;

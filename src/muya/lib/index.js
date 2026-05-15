@@ -466,7 +466,13 @@ class Muya {
       this.container.setAttribute('contenteditable', !options.readOnly)
       if (options.readOnly) {
         this.container.classList.add('ag-read-only')
-        // 清除浏览器选区，并重渲染（不放置光标），消除活跃 block 的语法标记
+        // 把 cursor 指向一个不存在的 key，使所有 block 以非激活状态渲染（不显示 # 等语法标记）
+        // 保留原始 cursor，退出阅读模式后用户点击即可重新定位
+        this.contentState.cursor = {
+          start: { key: '__readonly__', offset: 0 },
+          end: { key: '__readonly__', offset: 0 },
+          isEdit: false
+        }
         if (typeof window !== 'undefined') window.getSelection().removeAllRanges()
         this.contentState.render(false)
       } else {

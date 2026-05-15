@@ -12,7 +12,9 @@ const clickCtrl = (ContentState) => {
     // #1869: 折叠图标事件委托（不依赖 snabbdom on 属性，partialRender 后仍有效）
     const foldIcon = target.closest('.ag-fold-icon')
     if (foldIcon) {
+      event.preventDefault()  // 阻止文字被选中（防止变蓝）
       event.stopPropagation()
+      if (typeof window !== 'undefined') window.getSelection().removeAllRanges()
       const key = foldIcon.getAttribute('data-key')
       if (key) this.toggleFold(key)
       return

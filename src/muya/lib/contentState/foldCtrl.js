@@ -64,32 +64,17 @@ const foldCtrl = (ContentState) => {
     const headingBlock = this.getBlock(headingKey)
     if (!headingBlock || !/^h[1-6]$/.test(headingBlock.type)) return
 
-    const willFold = !headingBlock.folded
-    headingBlock.folded = willFold
+    headingBlock.folded = !headingBlock.folded
 
-    if (willFold && this.cursor) {
-      // 判断 cursor 所在 block 是否将被隐藏
-      const cursorKey = this.cursor.start.key
-      const cursorBlock = this.getBlock(cursorKey)
-      if (cursorBlock) {
-        const outmost = this.findOutMostBlock(cursorBlock)
-        if (outmost) {
-          // 临时跑一次 markFoldedBlocks 看 outmost 是否会被隐藏
-          this.markFoldedBlocks()
-          if (outmost.hiddenByFold) {
-            // 将 cursor 移到标题行（heading 的第一个叶子 span）末尾
-            const headingLine = headingBlock.children && headingBlock.children[0]
-            if (headingLine) {
-              const lineKey = headingLine.key
-              const offset = headingLine.text ? headingLine.text.length : 0
-              this.cursor = {
-                start: { key: lineKey, offset },
-                end: { key: lineKey, offset },
-                isEdit: false
-              }
-            }
-          }
-        }
+    // 无论折叠/展开，都将 cursor 移到标题行末尾，确保 cursor 不在 display:none 区域
+    const headingLine = headingBlock.children && headingBlock.children[0]
+    if (headingLine) {
+      const lineKey = headingLine.key
+      const offset = headingLine.text ? headingLine.text.length : 0
+      this.cursor = {
+        start: { key: lineKey, offset },
+        end: { key: lineKey, offset },
+        isEdit: false
       }
     }
 
