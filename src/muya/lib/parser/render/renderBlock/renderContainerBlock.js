@@ -153,11 +153,11 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
       })
       selector += `.${headingStyle}`
 
-      // #1869: 标题折叠图标（事件委托到 clickCtrl，此处不挂 on.click）
+      // #1869: 标题折叠图标（用 dataset 而非 attrs，toHTML/partialRender 路径也能正确序列化 data-key）
       if (block.hasFoldableContent) {
         const foldIcon = h(
           'span.ag-fold-icon',
-          { attrs: { 'data-key': key } },
+          { dataset: { key } },
           [block.folded ? '▶' : '▼']
         )
         children.unshift(foldIcon)

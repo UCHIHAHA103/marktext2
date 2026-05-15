@@ -1332,6 +1332,16 @@ i.ag-footnote-backlink {
 .ag-read-only .ag-format-picker {
   display: none !important;
 }
+/* 阅读模式隐藏换行符 ↩ 和其他语法标记 */
+.ag-read-only .ag-hard-line-break-space::after {
+  display: none !important;
+}
+.ag-read-only .ag-line-end {
+  display: none !important;
+}
+.ag-read-only .ag-gray {
+  display: none !important;
+}
 
 /* #1869: 标题折叠图标 */
 /* heading 需要 relative 定位，使图标能绝对定位在行内垂直居中位置 */
