@@ -4,6 +4,16 @@ import { HAS_TEXT_BLOCK_REG, CLASS_OR_ID } from '../config'
 import { getParentCheckBox } from '../utils/getParentCheckBox'
 import { cumputeCheckboxStatus } from '../utils/cumputeCheckBoxStatus'
 
+// #2451/#1869: 点击事件日志
+function clickLog(msg) {
+  try {
+    const fs = require('fs')
+    const now = new Date()
+    const time = now.toLocaleTimeString('zh-CN', { hour12: false })
+    fs.appendFileSync('C:\\Users\\Admin\\marktext-fold.log', `${time} [click] ${msg}\n`)
+  } catch (e) { /* ignore */ }
+}
+
 const clickCtrl = (ContentState) => {
   ContentState.prototype.clickHandler = function(event) {
     const { eventCenter } = this.muya
@@ -16,12 +26,15 @@ const clickCtrl = (ContentState) => {
       event.stopPropagation()
       if (typeof window !== 'undefined') window.getSelection().removeAllRanges()
       const key = foldIcon.getAttribute('data-key')
+      clickLog(`折叠图标点击 data-key=${key}`)
       if (key) this.toggleFold(key)
       return
     }
 
     // #2451: 阅读模式下屏蔽编辑点击，不更新 cursor，不触发重渲染
-    if (this.muya.container.getAttribute('contenteditable') === 'false') return
+    const isReadOnly = this.muya.container.getAttribute('contenteditable') === 'false'
+    clickLog(`click target=${target.tagName}.${target.className.slice(0,40)} readOnly=${isReadOnly} cursorKey=${this.cursor && this.cursor.start && this.cursor.start.key}`)
+    if (isReadOnly) return
 
     if (isMuyaEditorElement(target)) {
       const lastBlock = this.getLastBlock()

@@ -14,6 +14,16 @@ import ToolTip from './ui/tooltip'
 import I18nCSS from './utils/i18nCSS'
 import './assets/styles/index.css'
 
+// #1869/#2451: 日志工具 — 写入 C:\Users\Admin\marktext-fold.log
+function muyaLog(msg) {
+  try {
+    const fs = require('fs')
+    const now = new Date()
+    const time = now.toLocaleTimeString('zh-CN', { hour12: false })
+    fs.appendFileSync('C:\\Users\\Admin\\marktext-fold.log', `${time} [muya] ${msg}\n`)
+  } catch (e) { /* ignore */ }
+}
+
 class Muya {
   static plugins = []
 
@@ -464,10 +474,10 @@ class Muya {
     // #2451: 动态切换阅读/编辑模式
     if (typeof options.readOnly !== 'undefined') {
       this.container.setAttribute('contenteditable', !options.readOnly)
+      muyaLog(`setOptions readOnly=${options.readOnly}`)
       if (options.readOnly) {
         this.container.classList.add('ag-read-only')
-        // 把 cursor 指向一个不存在的 key，使所有 block 以非激活状态渲染（不显示 # 等语法标记）
-        // 保留原始 cursor，退出阅读模式后用户点击即可重新定位
+        // 把 cursor 指向哑 key，使所有 block 以非激活状态渲染（不显示 # 等语法标记）
         this.contentState.cursor = {
           start: { key: '__readonly__', offset: 0 },
           end: { key: '__readonly__', offset: 0 },
@@ -477,6 +487,19 @@ class Muya {
         this.contentState.render(false)
       } else {
         this.container.classList.remove('ag-read-only')
+        // 退出阅读模式时把 cursor 重置到首个叶子 block，防止 '__readonly__' key 残留导致崩溃
+        const blocks = this.contentState.blocks
+        const firstBlock = blocks && blocks[0]
+        if (firstBlock) {
+          const findLeaf = (b) => (b.children && b.children.length ? findLeaf(b.children[0]) : b)
+          const leaf = findLeaf(firstBlock)
+          this.contentState.cursor = {
+            start: { key: leaf.key, offset: 0 },
+            end: { key: leaf.key, offset: 0 },
+            isEdit: false
+          }
+        }
+        muyaLog('退出阅读模式，cursor 已重置到首行')
       }
     }
   }
