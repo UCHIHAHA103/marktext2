@@ -29,6 +29,7 @@ import htmlBlockCtrl from './htmlBlock'
 import clickCtrl from './clickCtrl'
 import inputCtrl from './inputCtrl'
 import tocCtrl from './tocCtrl'
+import foldCtrl from './foldCtrl'
 import emojiCtrl from './emojiCtrl'
 import imageCtrl from './imageCtrl'
 import linkCtrl from './linkCtrl'
@@ -61,6 +62,7 @@ const prototypes = [
   clickCtrl,
   inputCtrl,
   tocCtrl,
+  foldCtrl,
   emojiCtrl,
   imageCtrl,
   linkCtrl,
@@ -161,14 +163,12 @@ class ContentState {
         // need to store the whole state. Therefore, we push history only when the
         // user stops typing. Pushing one pending entry allows us to commit the
         // change before an undo action is triggered to partially solve #1321.
-        // #1321 改进：缩短提交间隔（500ms），让每次停顿都产生撤销点，
-        // 减少单次撤销跳过的字符数量
         if (this.historyTimer) clearTimeout(this.historyTimer)
         this.history.pushPending(getHistoryState())
 
         this.historyTimer = setTimeout(() => {
           this.history.commitPending()
-        }, 500)
+        }, 1500)
       } else {
         // Push history immediately
         this.history.push(getHistoryState())
@@ -246,6 +246,7 @@ class ContentState {
       m.active = i === index
     })
     this.setNextRenderRange()
+    this.markFoldedBlocks()
     this.stateRender.collectLabels(blocks)
     this.stateRender.render(blocks, activeBlocks, matches)
     if (isRenderCursor) {
@@ -284,6 +285,7 @@ class ContentState {
     const blocksToRender = blocks.slice(startIndex, endIndex)
 
     this.setNextRenderRange()
+    this.markFoldedBlocks()
     this.stateRender.collectLabels(blocks)
     this.stateRender.partialRender(blocksToRender, activeBlocks, matches, startKey, endKey)
     if (isRenderCursor) {
@@ -304,6 +306,7 @@ class ContentState {
       m.active = i === index
     })
     this.setNextRenderRange()
+    this.markFoldedBlocks()
     this.stateRender.collectLabels(blocks)
     this.stateRender.singleRender(block, activeBlocks, matches)
     if (isRenderCursor) {

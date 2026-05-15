@@ -22,6 +22,12 @@ const PRE_BLOCK_HASH = {
 
 export default function renderContainerBlock(parent, block, activeBlocks, matches, useCache = false, t) {
   let selector = this.getSelector(block, activeBlocks)
+
+  // #1869: 标题折叠 — 被折叠标题隐藏的 block
+  if (block.hiddenByFold) {
+    selector += '.ag-hidden-by-fold'
+  }
+
   const {
     key,
     align,
@@ -41,15 +47,6 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
     this.renderingTable = block
   } else if (/thead|tbody/.test(type)) {
     this.renderingRowContainer = block
-  } else if (type === 'blockquote') {
-    // #3764: GitHub Alerts — 检测 > [!NOTE/TIP/IMPORTANT/WARNING/CAUTION] 并加样式类
-    const firstPara = block.children && block.children[0]
-    const firstSpan = firstPara && firstPara.children && firstPara.children[0]
-    const firstText = (firstSpan && firstSpan.text) || ''
-    const alertMatch = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.exec(firstText)
-    if (alertMatch) {
-      selector += `.ag-github-alert.ag-github-alert-${alertMatch[1].toLowerCase()}`
-    }
   }
 
   const children = block.children.map(child => this.renderBlock(block, child, activeBlocks, matches, useCache, t))
@@ -146,6 +143,24 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
         head: type
       })
       selector += `.${headingStyle}`
+
+      // #1869: 标题折叠图标（仅当该标题下有可折叠内容时显示）
+      if (block.hasFoldableContent) {
+        const foldIcon = h(
+          'span.ag-fold-icon',
+          {
+            attrs: { 'data-key': key },
+            on: {
+              click: (e) => {
+                e.stopPropagation()
+                this.muya.contentState.toggleFold(key)
+              }
+            }
+          },
+          [block.folded ? '▶' : '▼']
+        )
+        children.unshift(foldIcon)
+      }
     }
     Object.assign(data.dataset, {
       role: type
