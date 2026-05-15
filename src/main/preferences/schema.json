@@ -1,4 +1,6 @@
-﻿{
+{
+    "confirmOnExit": { "description": "General--Show unsaved changes dialog when closing.", "type": "boolean", "default": true },
+  "defaultEditMode": { "description": "General--Default mode when opening a file.", "type": "string", "default": "edit" },
   "autoSave": {
     "description": "General--Automatically save the content being edited.",
     "type": "boolean",
