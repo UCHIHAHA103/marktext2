@@ -1311,7 +1311,7 @@ i.ag-footnote-backlink {
   z-index: 100;
 }
 
-/* #1869: 折叠图标 - 绝对定位，JS 控制显隐 */
+/* #1869: 折叠图标 - 标题上略微可见，hover 时清晰显示 */
 h1, h2, h3, h4, h5, h6 {
   position: relative;
   padding-left: 20px;
@@ -1329,7 +1329,19 @@ h1, h2, h3, h4, h5, h6 {
   width: 14px;
   text-align: center;
   line-height: 1;
-  /* opacity 由 JS mouseover/mouseout 控制 */
+  opacity: 0.25;
+  transition: opacity 0.15s;
+}
+
+/* 标题 hover 时清晰显示图标（CSS :has 在 Electron Chromium 中支持） */
+h1:has(.ag-fold-icon):hover .ag-fold-icon,
+h2:has(.ag-fold-icon):hover .ag-fold-icon,
+h3:has(.ag-fold-icon):hover .ag-fold-icon,
+h4:has(.ag-fold-icon):hover .ag-fold-icon,
+h5:has(.ag-fold-icon):hover .ag-fold-icon,
+h6:has(.ag-fold-icon):hover .ag-fold-icon {
+  opacity: 1;
+  color: var(--editorColor);
 }
 
 .ag-hidden-by-fold {

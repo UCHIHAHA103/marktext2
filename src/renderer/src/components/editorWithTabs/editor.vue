@@ -240,8 +240,16 @@ watch(focus, (value) => {
 watch(() => isReadOnly?.value ?? false, (value) => {
   if (editor.value) {
     editor.value.setOptions({ readOnly: value })
-    // 切换到只读时自动失焦，防止需要点空白区域才生效
-    if (value) editor.value.blur()
+    // 切换模式时强制失焦（edit→preview 立即生效）
+    try {
+      editor.value.blur()
+      const container = editor.value.container
+      if (container) {
+        container.blur()
+        const sel = window.getSelection()
+        if (sel) sel.removeAllRanges()
+      }
+    } catch(e) {}
   }
 })
 

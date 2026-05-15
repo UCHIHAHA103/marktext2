@@ -212,6 +212,8 @@ class ContentState {
   }
 
   setCursor() {
+    // 只读/预览模式：不设置 DOM 光标，否则 inline 元素会进入激活状态显示语法标记
+    if (this.muya && this.muya.container && this.muya.container.getAttribute('contenteditable') === 'false') return
     selection.setCursorRange(this.cursor)
   }
 
