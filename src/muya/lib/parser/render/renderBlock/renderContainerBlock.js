@@ -158,7 +158,7 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
         const foldIcon = h(
           'span.ag-fold-icon',
           { dataset: { key } },
-          ['●']
+          [block.folded ? '▶' : '▼']
         )
         children.unshift(foldIcon)
       }

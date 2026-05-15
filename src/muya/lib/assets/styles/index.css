@@ -1153,6 +1153,9 @@ span.ag-reference-link {
   position: absolute;
   border-radius: 4px;
   left: -35px;
+  /* heading 改为 flex 后文字行垂直居中，front-icon 也跟着居中 */
+  top: 50%;
+  transform: translateY(-50%);
   display: none;
   cursor: pointer;
   z-index: 99999;
@@ -1329,7 +1332,9 @@ i.ag-footnote-backlink {
 }
 .ag-read-only .ag-front-menu,
 .ag-read-only .ag-quick-insert,
-.ag-read-only .ag-format-picker {
+.ag-read-only .ag-format-picker,
+/* 预览模式下隐藏段落格式按钮（🔗 H₂ 等），无论是否 ag-active */
+.ag-read-only .ag-front-icon {
   display: none !important;
 }
 /* 阅读模式隐藏换行符 ↩ 和其他语法标记 */
