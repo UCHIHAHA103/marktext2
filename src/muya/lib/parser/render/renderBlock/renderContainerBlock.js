@@ -146,17 +146,16 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
 
       // #1869: 标题折叠图标（仅当该标题下有可折叠内容时显示）
       if (block.hasFoldableContent) {
-        console.log('[FOLD] rendering icon', key, 'folded:', block.folded)
         const foldChar = block.folded ? '\u25B6' : '\u25BC'
         const foldIcon = h(
           'span.ag-fold-icon',
           {
             attrs: { 'data-key': key, contenteditable: 'false' },
+            style: { opacity: '0' },
             on: {
               mousedown: (e) => { e.preventDefault(); e.stopPropagation() },
               click: (e) => {
-                e.preventDefault()
-                e.stopPropagation()
+                e.preventDefault(); e.stopPropagation()
                 console.log('[FOLD] icon click', key, 'folded:', block.folded)
                 this.muya.contentState.toggleFold(key)
               }
@@ -164,6 +163,16 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
           },
           [foldChar]
         )
+        // JS hover 替代 CSS :hover（更可靠）
+        if (!data.on) data.on = {}
+        data.on.mouseover = (e) => {
+          const icon = e.currentTarget.querySelector('.ag-fold-icon')
+          if (icon) icon.style.opacity = '1'
+        }
+        data.on.mouseout = (e) => {
+          const icon = e.currentTarget.querySelector('.ag-fold-icon')
+          if (icon) icon.style.opacity = '0'
+        }
         children.unshift(foldIcon)
       }
     }

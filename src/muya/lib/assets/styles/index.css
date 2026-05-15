@@ -1311,8 +1311,7 @@ i.ag-footnote-backlink {
   z-index: 100;
 }
 
-/* #1869: 标题折叠 */
-/* #1869: 折叠图标 - 绝对定位在标题行左侧，hover 时显示 */
+/* #1869: 折叠图标 - 绝对定位，JS 控制显隐 */
 h1, h2, h3, h4, h5, h6 {
   position: relative;
   padding-left: 20px;
@@ -1329,23 +1328,8 @@ h1, h2, h3, h4, h5, h6 {
   user-select: none;
   width: 14px;
   text-align: center;
-  opacity: 0;
-  transition: opacity 0.15s;
   line-height: 1;
-}
-
-/* 鼠标移到标题行才显示图标 */
-h1:hover > .ag-fold-icon,
-h2:hover > .ag-fold-icon,
-h3:hover > .ag-fold-icon,
-h4:hover > .ag-fold-icon,
-h5:hover > .ag-fold-icon,
-h6:hover > .ag-fold-icon {
-  opacity: 1;
-}
-
-.ag-fold-icon:hover {
-  color: var(--editorColor);
+  /* opacity 由 JS mouseover/mouseout 控制 */
 }
 
 .ag-hidden-by-fold {

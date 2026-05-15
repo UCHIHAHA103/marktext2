@@ -240,6 +240,8 @@ watch(focus, (value) => {
 watch(() => isReadOnly?.value ?? false, (value) => {
   if (editor.value) {
     editor.value.setOptions({ readOnly: value })
+    // 切换到只读时自动失焦，防止需要点空白区域才生效
+    if (value) editor.value.blur()
   }
 })
 
