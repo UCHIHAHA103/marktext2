@@ -477,6 +477,28 @@ export const useEditorStore = defineStore('editor', {
       })
 
       window.electron.ipcRenderer.on('mt::ask-for-close', () => {
+        // #session-log: 关闭时写详细会话日志，方便排查会话恢复问题
+        try {
+          const fs = require('fs')
+          const prefsStore = usePreferencesStore()
+          const now = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+          const isRO = prefsStore.isReadOnly
+          const lines = [
+            `${now} [close] ===== 窗口关闭 =====`,
+            `${now} [close] 标签总数: ${this.tabs.length}`,
+            `${now} [close] 当前模式: ${isRO ? '预览(只读)' : '编辑'}`,
+          ]
+          this.tabs.forEach((tab, i) => {
+            lines.push(
+              `${now} [close] 标签[${i + 1}]: ${tab.filename || '(无文件)'} | ` +
+              `保存=${tab.isSaved ? '✓' : '✗'} | ` +
+              `字数=${tab.wordCount?.word ?? 0} | ` +
+              `路径=${tab.pathname || '(无路径)'}`
+            )
+          })
+          fs.appendFileSync('C:\\Users\\Admin\\marktext-fold.log', lines.join('\n') + '\n')
+        } catch (e) { /* ignore */ }
+
         sendBufferedState()
           .catch((err) => {
             console.error('Failed to update buffered state before closing', err)

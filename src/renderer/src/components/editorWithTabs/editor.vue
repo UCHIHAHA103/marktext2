@@ -237,19 +237,9 @@ watch(focus, (value) => {
 })
 
 // #2451: 监听阅读/编辑状态变化，实时更新 muya
-watch(() => isReadOnly?.value ?? false, (value) => {
+watch(isReadOnly, (value) => {
   if (editor.value) {
     editor.value.setOptions({ readOnly: value })
-    // 切换模式时强制失焦（edit→preview 立即生效）
-    try {
-      editor.value.blur()
-      const container = editor.value.container
-      if (container) {
-        container.blur()
-        const sel = window.getSelection()
-        if (sel) sel.removeAllRanges()
-      }
-    } catch(e) {}
   }
 })
 
@@ -753,7 +743,6 @@ const scrollToCursor = (duration = 300) => {
 }
 
 const scrollToCords = (y) => {
-  if (!editor.value) return
   const { container } = editor.value
   // Depending on how much the user previously scrolled, sometimes the container has not fully rendered all elements.
   // Hence, container.scrollHeight < [saved scrollTop]
@@ -772,7 +761,6 @@ const scrollToCords = (y) => {
   requestAnimationFrame(() => {
     if (!container) return
     // wait for the padding to be applied (if any)
-    console.log('[MT] scrollToCords RAF: restoring visibility, setting scrollTop to', y)
     container.style.visibility = 'visible'
     container.style.pointerEvents = 'auto'
     container.scrollTop = y
@@ -942,13 +930,16 @@ const handleDialogTableConfirm = () => {
 
 // listen for `open-single-file` event, it will call this method only when open a new file.
 const setMarkdownToEditor = ({ markdown: newMarkdown, cursor: newCursor }) => {
-  console.log('[MT] setMarkdownToEditor (file-loaded)', { editorReady: !!editor.value, markdownLen: newMarkdown?.length, hasCursor: !!newCursor })
   if (editor.value) {
     editor.value.clearHistory()
     if (newCursor) {
       editor.value.setMarkdown(newMarkdown, newCursor, true)
     } else {
       editor.value.setMarkdown(newMarkdown)
+    }
+    // #2451: 每次加载新文件时应用默认模式，确保新标签遵循偏好设置
+    if (defaultEditMode.value === 'read') {
+      preferencesStore.SET_MODE({ type: 'isReadOnly', checked: true })
     }
   }
 }
@@ -963,11 +954,6 @@ const handleFileChange = ({
   muyaIndexCursor,
   blocks = undefined
 }) => {
-  console.log('[MT] handleFileChange called', { editorReady: !!editor.value, hasMarkdown: typeof newMarkdown === 'string', markdownLen: newMarkdown?.length, renderCursor, scrollTop, hasCursor: !!newCursor, hasMuyaIndexCursor: !!muyaIndexCursor, hasBlocks: !!blocks, hasHistory: !!history })
-  if (!editor.value) {
-    console.warn('[MT] handleFileChange: editor not ready, ignoring event')
-    return
-  }
   const { container } = editor.value
 
   if (editor.value) {
@@ -982,12 +968,11 @@ const handleFileChange = ({
     }
 
     if (typeof scrollTop === 'number' && scrollTop > 0) {
-      console.log('[MT] scrolling to saved position', scrollTop, '- hiding container temporarily')
+      // 仅在需要滚动到非零位置时才隐藏容器（避免 scrollTop=0 时 visibility 卡在 hidden）
       container.style.visibility = 'hidden'
       container.style.pointerEvents = 'none'
       scrollToCords(scrollTop)
     } else {
-      console.log('[MT] no scroll needed, showing container. scrollTop:', scrollTop)
       container.style.visibility = 'visible'
       container.style.pointerEvents = 'auto'
       scrollToCursor(0)
@@ -1014,7 +999,6 @@ const handleScreenShot = () => {
 }
 
 const handleResetPaddingBottom = () => {
-  if (!editor.value) return
   const { container } = editor.value
   const newScollableHeightWithoutPadding =
     container.scrollHeight -
@@ -1035,18 +1019,6 @@ const handleLanguageChanged = () => {
 const resizeObserverForEditor = new ResizeObserver(handleResetPaddingBottom)
 
 onMounted(() => {
-  // 早期日志：在任何可能崩溃的代码之前记录状态
-  try {
-    var _isRO = typeof isReadOnly
-    var _dm = typeof defaultEditMode
-    console.log('[MT] onMounted START', {
-      isReadOnlyRefType: _isRO,
-      isReadOnlyVal: String(isReadOnly == null ? 'NULL' : isReadOnly.value),
-      defaultEditModeRefType: _dm,
-      defaultEditModeVal: String(defaultEditMode == null ? 'NULL' : defaultEditMode.value),
-      hasEditor: !!editor.value,
-    })
-  } catch(e2) { console.error('[MT] early log err:', e2) }
   printer = new Printer()
   const ele = editorRef.value
 
@@ -1100,7 +1072,7 @@ onMounted(() => {
     clipboardFilePath: guessClipboardFilePath,
     imagePathAutoComplete,
     t, // Add the translation function
-    readOnly: isReadOnly?.value ?? false // #2451 - optional chain guards undefined ref
+    readOnly: isReadOnly.value // #2451
   }
 
   if (/dark/i.test(theme.value)) {
@@ -1116,13 +1088,11 @@ onMounted(() => {
   }
 
   // #2451: 根据 defaultEditMode 偏好设置初始阅读/编辑状态
-  if (defaultEditMode?.value === 'read') {
+  if (defaultEditMode.value === 'read') {
     preferencesStore.SET_MODE({ type: 'isReadOnly', checked: true })
   }
 
-  console.log('[MT] creating Muya editor', { readOnly: options.readOnly, markdownLen: options.markdown?.length })
   editor.value = new Muya(ele, options)
-  console.log('[MT] Muya editor created, container:', !!editor.value?.container)
 
   const { container } = editor.value
 
@@ -1145,7 +1115,6 @@ onMounted(() => {
   }
 
   // listen for bus events.
-  console.log('[MT] registering bus events: file-loaded, file-changed')
   bus.on('file-loaded', setMarkdownToEditor)
   bus.on('invalidate-image-cache', handleInvalidateImageCache)
   bus.on('undo', handleUndo)

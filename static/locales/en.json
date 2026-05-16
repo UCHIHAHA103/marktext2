@@ -519,7 +519,7 @@
         "openBlankState": "Open blank state",
         "openDefaultDirectory": "Open default directory",
         "openLastFolder": "Restore opened folder",
-        "restoreAll": "Restore all opened files and folders",
+        "restoreAll": "Restore last opened files",
         "selectFolder": "Select Folder",
         "openBlankPage": "Open blank page"
       },

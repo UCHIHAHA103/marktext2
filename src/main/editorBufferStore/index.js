@@ -52,18 +52,40 @@ class EditorBufferStore extends EventEmitter {
   }
 
   /**
-   * 返回"上次会话"对应的 buffer stores（若清单存在则过滤，否则返回全部）
-   * 用于替代 getAll()，避免积累的旧 buffer 文件被误认为上次会话
+   * 返回"上次会话"对应的 buffer stores。
+   * 若清单存在则精确过滤；若无清单（首次使用新版本），只返回最近修改的 1 个 buffer
+   * 避免历史积累的旧 buffer 文件造成"十几个窗口"问题。
    */
   getAllForSession() {
     const all = this.getAllBufferStores()
     const sessionIds = this.getLastSessionIds()
-    if (!sessionIds) return all  // 首次启动，无清单，返回全部
-    const filtered = {}
-    for (const id of sessionIds) {
-      if (all[id]) filtered[id] = all[id]
+
+    if (sessionIds) {
+      // 按清单精确恢复
+      const filtered = {}
+      for (const id of sessionIds) {
+        if (all[id]) filtered[id] = all[id]
+      }
+      return Object.keys(filtered).length > 0 ? filtered : all
     }
-    return filtered
+
+    // 无清单（升级到新版本的首次启动）：只恢复最近修改的 1 个 buffer，避免多窗口问题
+    const ids = Object.keys(all)
+    if (ids.length <= 1) return all
+
+    let mostRecentId = null
+    let mostRecentTime = 0
+    for (const id of ids) {
+      try {
+        const stat = fs.statSync(all[id].filePath)
+        if (stat.mtimeMs > mostRecentTime) {
+          mostRecentTime = stat.mtimeMs
+          mostRecentId = id
+        }
+      } catch (e) { /* skip */ }
+    }
+
+    return mostRecentId ? { [mostRecentId]: all[mostRecentId] } : all
   }
 
   getAllBufferStores() {
