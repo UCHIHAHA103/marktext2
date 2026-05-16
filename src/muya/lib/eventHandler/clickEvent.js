@@ -13,7 +13,6 @@ class ClickEvent {
   contextClickBingding() {
     const { container, eventCenter, contentState } = this.muya
     const handler = (event) => {
-      if (container.getAttribute('contenteditable') === 'false') return // read-only: skip inline editing activation
       // Allow native context menu in MarkText.
       if (!global || !global.marktext) {
         // __MARKTEXT_PATCH__
@@ -214,17 +213,24 @@ class ClickEvent {
         event.stopPropagation()
         if (target.closest('div.ag-container-preview')) {
           event.preventDefault()
-          const figureEle = target.closest('figure')
-          contentState.handleContainerBlockClick(figureEle)
+          // 预览（只读）模式下不允许进入图表编辑模式
+          if (container.getAttribute('contenteditable') !== 'false') {
+            const figureEle = target.closest('figure')
+            contentState.handleContainerBlockClick(figureEle)
+          }
         }
         return
       }
-      // handler container preview click
+      // handler container preview click（编辑图标）
       const editIcon = target.closest('.ag-container-icon')
       if (editIcon) {
         event.preventDefault()
         event.stopPropagation()
-        if (editIcon.parentNode.classList.contains('ag-container-block')) {
+        // 预览（只读）模式下不允许通过编辑图标进入编辑模式
+        if (
+          container.getAttribute('contenteditable') !== 'false' &&
+          editIcon.parentNode.classList.contains('ag-container-block')
+        ) {
           contentState.handleContainerBlockClick(editIcon.parentNode)
         }
       }
