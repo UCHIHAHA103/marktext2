@@ -168,6 +168,7 @@ export default function(keybindings, userPreference, recentlyUsedFiles) {
     {
       label: t('menu.file.preferences'),
       accelerator: keybindings.getAccelerator('file.preferences'),
+      acceleratorLabel: 'Ctrl+,',  // 防止 Electron 把逗号显示为 "Comma"
       visible: !isOsx,
       click() {
         userSetting()

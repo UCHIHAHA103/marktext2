@@ -144,23 +144,19 @@ export default function(keybindings) {
           actions.findInFolder(browserWindow)
         }
       },
-      {
-        type: 'separator',
-        visible: isOsx  // 截图功能仅 macOS，分割线也一并隐藏
-      },
-      {
-        label: t('menu.edit.screenshot'),
-        id: 'screenshot',
-        visible: isOsx,
-        accelerator: keybindings.getAccelerator(COMMANDS.EDIT_SCREENSHOT),
-        click(menuItem, browserWindow) {
-          actions.screenshot(browserWindow)
-        }
-      },
-      {
-        type: 'separator',
-        visible: isOsx  // 截图与行结束符分隔，仅 macOS 需要
-      },
+      // 截图及其前后分隔线仅 macOS 显示，用展开运算符彻底从数组移除（避免 Electron 在 Windows 上渲染隐藏分隔线）
+      ...(isOsx ? [
+        { type: 'separator' },
+        {
+          label: t('menu.edit.screenshot'),
+          id: 'screenshot',
+          accelerator: keybindings.getAccelerator(COMMANDS.EDIT_SCREENSHOT),
+          click(menuItem, browserWindow) {
+            actions.screenshot(browserWindow)
+          }
+        },
+        { type: 'separator' }
+      ] : []),
       {
         // TODO: Remove this menu entry and add it to the command palette (#1408).
         label: t('menu.edit.lineEnding'),
