@@ -74,6 +74,10 @@ const importRegister = (ContentState) => {
    * @returns
    */
   ContentState.prototype.markdownToState = function(markdown, checkCursorSignature = false) {
+    // 预处理：把被空行分隔的表格行合并为连续行（逐行粘贴时每行变成独立段落）
+    // 只有两侧都是以 | 开头/结尾的行才合并，不影响普通段落
+    markdown = markdown.replace(/(\|[^\n]*\|[ \t]*)\n\n(?=[ \t]*\|)/g, '$1\n')
+
     // mock a root block...
     const rootState = {
       key: null,
