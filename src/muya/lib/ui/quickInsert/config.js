@@ -46,6 +46,12 @@ export const createQuickInsertObj = (t) => {
       shortCut: `${COMMAND_KEY}+0`,
       icon: paragraphIcon
     }, {
+      title: '今日日期',
+      subTitle: 'Insert current date (YYYY-MM-DD)',
+      label: 'date-today',
+      shortCut: '',
+      icon: hrIcon
+    }, {
       title: translate('quickInsert.horizontalLine.title'),
       subTitle: translate('quickInsert.horizontalLine.subtitle'),
       label: 'hr',

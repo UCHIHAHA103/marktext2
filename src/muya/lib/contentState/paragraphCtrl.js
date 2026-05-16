@@ -1063,6 +1063,88 @@ const paragraphCtrl = (ContentState) => {
     }
     return internalType
   }
+
+  /**
+   * #580: 整行上移/下移 — 交换当前 outmost block 与其上/下 sibling
+   * 仅处理根级 blocks（this.blocks 数组），嵌套 block 暂不支持
+   */
+  ContentState.prototype.moveBlockUp = function() {
+    if (!this.cursor || !this.cursor.start) return
+    const curBlock = this.getBlock(this.cursor.start.key)
+    if (!curBlock) return
+    const outmost = this.findOutMostBlock(curBlock)
+    if (!outmost || !outmost.preSibling) return // 已在顶部
+
+    const pre = this.getBlock(outmost.preSibling)
+    if (!pre) return
+
+    const idx = this.blocks.findIndex(b => b.key === outmost.key)
+    const preIdx = this.blocks.findIndex(b => b.key === pre.key)
+    if (idx === -1 || preIdx === -1) return
+
+    // 交换数组位置
+    this.blocks[preIdx] = outmost
+    this.blocks[idx] = pre
+
+    // 更新 sibling 链
+    const prePre = pre.preSibling   // A（pre 之前）
+    const postOutmost = outmost.nextSibling  // D（outmost 之后）
+
+    outmost.preSibling = prePre
+    outmost.nextSibling = pre.key
+    pre.preSibling = outmost.key
+    pre.nextSibling = postOutmost
+
+    if (prePre) {
+      const b = this.getBlock(prePre)
+      if (b) b.nextSibling = outmost.key
+    }
+    if (postOutmost) {
+      const b = this.getBlock(postOutmost)
+      if (b) b.preSibling = pre.key
+    }
+
+    this.render()
+  }
+
+  ContentState.prototype.moveBlockDown = function() {
+    if (!this.cursor || !this.cursor.start) return
+    const curBlock = this.getBlock(this.cursor.start.key)
+    if (!curBlock) return
+    const outmost = this.findOutMostBlock(curBlock)
+    if (!outmost || !outmost.nextSibling) return // 已在底部
+
+    const next = this.getBlock(outmost.nextSibling)
+    if (!next) return
+
+    const idx = this.blocks.findIndex(b => b.key === outmost.key)
+    const nextIdx = this.blocks.findIndex(b => b.key === next.key)
+    if (idx === -1 || nextIdx === -1) return
+
+    // 交换数组位置
+    this.blocks[idx] = next
+    this.blocks[nextIdx] = outmost
+
+    // 更新 sibling 链
+    const preOutmost = outmost.preSibling   // A
+    const postNext = next.nextSibling       // D
+
+    next.preSibling = preOutmost
+    next.nextSibling = outmost.key
+    outmost.preSibling = next.key
+    outmost.nextSibling = postNext
+
+    if (preOutmost) {
+      const b = this.getBlock(preOutmost)
+      if (b) b.nextSibling = next.key
+    }
+    if (postNext) {
+      const b = this.getBlock(postNext)
+      if (b) b.preSibling = outmost.key
+    }
+
+    this.render()
+  }
 }
 
 export default paragraphCtrl

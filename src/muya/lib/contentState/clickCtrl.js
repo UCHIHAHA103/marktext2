@@ -130,10 +130,31 @@ const clickCtrl = (ContentState) => {
     let parentNode = inlineNode
     while (parentNode !== null && parentNode.classList.contains(CLASS_OR_ID.AG_INLINE_RULE)) {
       if (parentNode.tagName === 'A') {
+        const href = parentNode.getAttribute('href') || ''
+
+        // #2469: 文档内锚点跳转 — href 以 # 开头时滚动到对应标题
+        if (href.startsWith('#')) {
+          event.preventDefault()
+          const anchor = href.slice(1).toLowerCase()
+          const headings = this.muya.container.querySelectorAll('[data-head]')
+          for (const el of headings) {
+            // 把标题文字转换成 anchor 格式（小写，去除非字母数字，空格→连字符）
+            const text = el.textContent.trim()
+              .toLowerCase()
+              .replace(/[^\p{L}\p{N}\s-]/gu, '')
+              .replace(/\s+/g, '-')
+            if (text === anchor) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              break
+            }
+          }
+          break
+        }
+
         const formatType = 'link' // auto link or []() link
         const data = {
           text: inlineNode.textContent,
-          href: parentNode.getAttribute('href') || ''
+          href
         }
         eventCenter.dispatch('format-click', {
           event,

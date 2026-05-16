@@ -173,6 +173,21 @@ class QuickInsert extends BaseScrollFloat {
       case 'paragraph':
         contentState.partialRender()
         break
+      case 'date-today': {
+        // #2855: 插入今日日期 YYYY-MM-DD
+        const now = new Date()
+        const yyyy = now.getFullYear()
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
+        const dateStr = `${yyyy}-${mm}-${dd}`
+        this.block.text = dateStr
+        contentState.cursor = {
+          start: { key, offset: dateStr.length },
+          end: { key, offset: dateStr.length }
+        }
+        contentState.partialRender()
+        break
+      }
       default:
         contentState.updateParagraph(item.label, true)
         break

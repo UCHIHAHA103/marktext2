@@ -105,6 +105,20 @@ class Keyboard {
   keydownBinding() {
     const { container, eventCenter, contentState } = this.muya
     const docHandler = (event) => {
+      // #580: Alt+↑/↓ 整行上移/下移
+      if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+        if (event.code === EVENT_KEYS.ArrowUp) {
+          event.preventDefault()
+          contentState.moveBlockUp()
+          return
+        }
+        if (event.code === EVENT_KEYS.ArrowDown) {
+          event.preventDefault()
+          contentState.moveBlockDown()
+          return
+        }
+      }
+
       switch (event.code) {
         case EVENT_KEYS.Enter:
           return contentState.docEnterHandler(event)
