@@ -1454,7 +1454,7 @@ export const useEditorStore = defineStore('editor', {
             }
             case 'add':
             case 'change': {
-              const { autoSave } = preferencesStore
+              const { autoSave, autoReloadOnChange } = preferencesStore
               if (autoSave) {
                 if (autoSaveTimers.has(id)) {
                   const timer = autoSaveTimers.get(id)
@@ -1468,23 +1468,31 @@ export const useEditorStore = defineStore('editor', {
                 }
               }
 
-              // PR #4075: 文件已保存时静默加载外部变更，不触发未保存状态
+              // 自动重载开关：直接重载，不询问，不显示通知
+              if (autoReloadOnChange) {
+                this.loadChange(change)
+                debouncedSendBufferedState()
+                break
+              }
+
+              // PR #4075: 文件已保存时静默加载外部变更，只显示简短提示（已自动重载）
               if (isSaved) {
                 this.loadChange(change)
                 this.pushTabNotification({
                   tabId: id,
-                  msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
+                  msg: i18n.global.t('store.editor.fileReloadedOnDisk', { name: filename }),
                   showConfirm: false,
                   exclusiveType: 'file_changed',
                   style: 'info'
                 })
               } else {
-                // 有本地未保存改动时，询问用户是否重新加载
+                // 有本地未保存改动时，显示"重载"按钮供用户确认
                 tab.isSaved = false
                 this.pushTabNotification({
                   tabId: id,
                   msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
                   showConfirm: true,
+                  confirmLabel: '重载',
                   exclusiveType: 'file_changed',
                   action: (status) => {
                     if (status) {

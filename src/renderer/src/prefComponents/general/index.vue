@@ -22,6 +22,11 @@
           :step="100"
           :on-change="(value) => onSelectChange('autoSaveDelay', value)"
         />
+        <bool
+          description="文件在磁盘上被修改后自动重载（不弹提示，不需要手动确认）"
+          :bool="autoReloadOnChange"
+          :on-change="(value) => onSelectChange('autoReloadOnChange', value)"
+        />
       </template>
     </compound>
 
@@ -227,6 +232,7 @@ const preferenceStore = usePreferencesStore()
 const {
   autoSave,
   autoSaveDelay,
+  autoReloadOnChange,
   titleBarStyle,
   defaultDirectoryToOpen,
   openFilesInNewWindow,

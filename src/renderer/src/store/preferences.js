@@ -16,6 +16,7 @@ export const usePreferencesStore = defineStore('preferences', {
     startUpAction: 'restoreAll',
     restoreLayoutState: true,
     defaultEditMode: 'read', // #2451: 打开文档的默认模式，'edit' 或 'read'
+    autoReloadOnChange: false, // 文件被外部修改时自动重载（不提示确认）
     defaultDirectoryToOpen: '',
     lastOpenedFolder: '',
     treePathExcludePatterns: [],

@@ -12,13 +12,13 @@
       <div>
         <span
           v-if="currentNotification.showConfirm"
-          class="inline-button"
+          class="inline-button action-button"
           @click.stop="handleClick(true)"
         >
-          {{ t('common.ok') }}
+          {{ currentNotification.confirmLabel || t('common.ok') }}
         </span>
         <span
-          class="inline-button"
+          class="inline-button close-button"
           @click.stop="handleClick(false)"
         >
           <svg
@@ -112,14 +112,24 @@ const handleClick = (status) => {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 24px;
     height: 24px;
     font-size: 12px;
     cursor: pointer;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
+  /* 关闭按钮保持方形 */
+  & .close-button {
+    width: 24px;
+  }
+  /* 操作按钮（重载等）自动宽度，有左右内边距 */
+  & .action-button {
+    padding: 0 10px;
+    font-weight: 500;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.15);
+  }
   & .inline-button:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.6);
   }
 }
