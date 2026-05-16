@@ -170,7 +170,15 @@ class ExportMarkdown {
 
   insertLineBreak(result, indent) {
     if (!result.length) return
-    result.push(`${indent}\n`)
+    // #1354: 确保块与块之间始终有一个完整的空行（两个换行符）
+    // 上一个块的文本已以 \n 结尾，再加一个 \n → 合计 \n\n = 一个空行
+    // 若上一个块文本不以 \n 结尾（edge case），则加两个 \n 以保证空行存在
+    const last = result[result.length - 1]
+    if (typeof last === 'string' && !last.endsWith('\n')) {
+      result.push(`${indent}\n\n`)
+    } else {
+      result.push(`${indent}\n`)
+    }
   }
 
   normalizeParagraphText(block, indent) {

@@ -131,9 +131,17 @@ export const usePreferencesStore = defineStore('preferences', {
     },
     SET_MODE({ type, checked }) {
       this[type] = checked
+      // #1274: 打字机/专注模式重启后恢复 — 持久化到 electron-store
+      if (type === 'typewriter' || type === 'focus') {
+        this.SET_SINGLE_PREFERENCE({ type, value: checked })
+      }
     },
     TOGGLE_VIEW_MODE(entryName) {
       this[entryName] = !this[entryName]
+      // #1274: 同上，TOGGLE 路径也持久化
+      if (entryName === 'typewriter' || entryName === 'focus') {
+        this.SET_SINGLE_PREFERENCE({ type: entryName, value: this[entryName] })
+      }
     },
     ASK_FOR_USER_PREFERENCE() {
       window.electron.ipcRenderer.send('mt::ask-for-user-preference')
