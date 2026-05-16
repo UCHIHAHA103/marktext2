@@ -167,8 +167,8 @@ export default function(keybindings, userPreference, recentlyUsedFiles) {
     },
     {
       label: t('menu.file.preferences'),
-      accelerator: keybindings.getAccelerator('file.preferences'),
-      acceleratorLabel: 'Ctrl+,',  // 防止 Electron 把逗号显示为 "Comma"
+      // 不在菜单项显示快捷键：Electron 在 Windows 会把 Ctrl+, 显示为 "Ctrl+Comma"
+      // 全局快捷键 Ctrl+, 仍通过 keybinding 系统有效，此处只是不展示提示
       visible: !isOsx,
       click() {
         userSetting()

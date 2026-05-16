@@ -144,7 +144,7 @@ export default function(keybindings) {
           actions.findInFolder(browserWindow)
         }
       },
-      // 截图及其前后分隔线仅 macOS 显示，用展开运算符彻底从数组移除（避免 Electron 在 Windows 上渲染隐藏分隔线）
+      // macOS 专有：截图功能及其上方分隔线（用展开运算符避免 Windows 渲染多余分隔线）
       ...(isOsx ? [
         { type: 'separator' },
         {
@@ -154,9 +154,12 @@ export default function(keybindings) {
           click(menuItem, browserWindow) {
             actions.screenshot(browserWindow)
           }
-        },
-        { type: 'separator' }
+        }
       ] : []),
+      // 行结束符前的分隔线（所有平台均显示）
+      {
+        type: 'separator'
+      },
       {
         // TODO: Remove this menu entry and add it to the command palette (#1408).
         label: t('menu.edit.lineEnding'),

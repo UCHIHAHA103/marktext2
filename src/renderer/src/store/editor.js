@@ -1475,32 +1475,22 @@ export const useEditorStore = defineStore('editor', {
                 break
               }
 
-              // PR #4075: 文件已保存时静默自动重载（与原始行为一致）
-              if (isSaved) {
-                this.loadChange(change)
-                this.pushTabNotification({
-                  tabId: id,
-                  msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
-                  showConfirm: false,
-                  exclusiveType: 'file_changed',
-                  style: 'info'
-                })
-              } else {
-                // 有未保存改动时，显示明显的"重载"按钮供用户确认（原 OK 按钮过小，改为 confirmLabel）
+              // 自动重载开关=关：不论文件是否已保存，都不自动重载，显示"重载"按钮由用户决定
+              if (!isSaved) {
                 tab.isSaved = false
-                this.pushTabNotification({
-                  tabId: id,
-                  msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
-                  showConfirm: true,
-                  confirmLabel: '重载',
-                  exclusiveType: 'file_changed',
-                  action: (status) => {
-                    if (status) {
-                      this.loadChange(change)
-                    }
-                  }
-                })
               }
+              this.pushTabNotification({
+                tabId: id,
+                msg: i18n.global.t('store.editor.fileChangedOnDisk', { name: filename }),
+                showConfirm: true,
+                confirmLabel: '重载',
+                exclusiveType: 'file_changed',
+                action: (status) => {
+                  if (status) {
+                    this.loadChange(change)
+                  }
+                }
+              })
               debouncedSendBufferedState()
               break
             }
