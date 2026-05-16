@@ -1140,8 +1140,7 @@
       "exportSuccessTitle": "Exported successfully",
       "exportSuccessMessage": "Exported \"{name}\" successfully!",
       "fileRemovedOnDisk": "\"{name}\" has been removed on disk.",
-      "fileChangedOnDisk": "\"{name}\" has been changed on disk. Reload to discard local changes?",
-      "fileReloadedOnDisk": "\"{name}\" has been changed on disk and reloaded automatically."
+      "fileChangedOnDisk": "\"{name}\" has been changed on disk. Reload to discard local changes?"
     }
   },
   "spellchecker": {
