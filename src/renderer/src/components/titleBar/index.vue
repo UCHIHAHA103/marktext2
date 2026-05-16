@@ -82,9 +82,9 @@
           </div>
         </el-tooltip>
         <!-- #2791: 已选字数已移入 W 气泡弹窗，此处不再显示 -->
-        <!-- #2451: 阅读/编辑模式切换按钮 -->
+        <!-- #2451: 阅读/编辑模式切换按钮（wordCount 有值说明有文件打开，无需依赖 pathname） -->
         <div
-          v-if="pathname"
+          v-if="wordCount"
           class="read-only-toggle title-no-drag"
           :class="{ 'is-read-only': isReadOnly }"
           :title="isReadOnly ? '切换到编辑模式' : '切换到阅读模式'"
