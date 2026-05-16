@@ -68,6 +68,8 @@ class WindowManager extends EventEmitter {
     this._windows = new Map()
     this._windowActivity = new WindowActivityList()
     this.editorBufferStore = editorBufferStore
+    // 本次关闭序列中第一个窗口关闭时记录的完整窗口列表，用于生成会话清单
+    this._pendingCloseSession = null
 
     // TODO(need::refactor): Please see #1035.
     this._watcher = new Watcher(preferences)
@@ -98,6 +100,8 @@ class WindowManager extends EventEmitter {
     window.on('window-closed', () => {
       this.remove(windowId)
       this._watcher.unwatchByWindowId(windowId)
+      // 新窗口打开时重置关闭序列标记，确保下次关闭能重新捕获完整列表
+      this._pendingCloseSession = null
     })
   }
 
@@ -361,13 +365,17 @@ class WindowManager extends EventEmitter {
       const win = BrowserWindow.fromWebContents(e.sender)
       const editorWindows = this.getWindowsByType('editor')
 
-      // 最后一个窗口即将关闭时，把当前所有窗口的 buffer ID 写入会话清单，
-      // 下次 restoreAll 只恢复这些窗口，避免积累的旧 buffer 造成"十几个窗口"问题
-      if (editorWindows.length <= 1) {
-        const sessionIds = editorWindows
+      // 第一个窗口关闭时，快照当前所有窗口 ID（此时全部窗口仍在列表中）
+      // 最后一个窗口关闭时，将快照写入会话清单（lastSession.json）
+      // 这样多窗口同时关闭时能正确恢复所有窗口，而不只是最后一个
+      if (!this._pendingCloseSession) {
+        this._pendingCloseSession = editorWindows
           .map(w => w.browserWindow?.restoreBufferId)
           .filter(Boolean)
-        this.editorBufferStore.saveSessionManifest(sessionIds)
+      }
+      if (editorWindows.length <= 1) {
+        this.editorBufferStore.saveSessionManifest(this._pendingCloseSession || [])
+        this._pendingCloseSession = null
       }
 
       // Before closing, update the buffer store if needed

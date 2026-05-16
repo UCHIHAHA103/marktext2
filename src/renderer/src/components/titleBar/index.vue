@@ -443,6 +443,8 @@ div.title > span {
   padding: 0 5px;
   box-sizing: border-box;
   transition: all 0.25s ease-in-out;
+  white-space: nowrap;  /* 字数再多也不换行 */
+  flex-shrink: 0;
   & > .text-center-vertical {
     padding: 2px 5px;
     border-radius: 3px;

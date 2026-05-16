@@ -65,11 +65,18 @@ export const useLayoutStore = defineStore('layout', {
     },
     TOGGLE_LAYOUT_ENTRY(entryName) {
       this[entryName] = !this[entryName]
+      const preferencesStore = usePreferencesStore()
+      // #2642/#1274: 切换侧边栏/标签栏时同步持久化到偏好设置，重启后能恢复
       if (entryName === 'showSideBar') {
-        const preferencesStore = usePreferencesStore()
         preferencesStore.SET_SINGLE_PREFERENCE({
           type: 'sideBarVisibility',
           value: !!this.showSideBar
+        })
+      }
+      if (entryName === 'showTabBar') {
+        preferencesStore.SET_SINGLE_PREFERENCE({
+          type: 'tabBarVisibility',
+          value: !!this.showTabBar
         })
       }
       debouncedSendBufferedState()
