@@ -359,8 +359,19 @@ class WindowManager extends EventEmitter {
     // Force close a BrowserWindow
     ipcMain.on('mt::close-window', (e) => {
       const win = BrowserWindow.fromWebContents(e.sender)
+      const editorWindows = this.getWindowsByType('editor')
+
+      // 最后一个窗口即将关闭时，把当前所有窗口的 buffer ID 写入会话清单，
+      // 下次 restoreAll 只恢复这些窗口，避免积累的旧 buffer 造成"十几个窗口"问题
+      if (editorWindows.length <= 1) {
+        const sessionIds = editorWindows
+          .map(w => w.browserWindow?.restoreBufferId)
+          .filter(Boolean)
+        this.editorBufferStore.saveSessionManifest(sessionIds)
+      }
+
       // Before closing, update the buffer store if needed
-      this.editorBufferStore.handleClose(win?.restoreBufferId, this.getWindowsByType('editor'))
+      this.editorBufferStore.handleClose(win?.restoreBufferId, editorWindows)
       this.forceClose(win)
     })
 

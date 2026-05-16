@@ -98,6 +98,23 @@
 
     <compound>
       <template #head>
+        <h6 class="title">打开文档默认模式</h6>
+      </template>
+      <template #children>
+        <section>
+          <el-radio-group
+            v-model="defaultEditMode"
+            class="startup-action-ctrl"
+          >
+            <el-radio label="edit">编辑模式</el-radio>
+            <el-radio label="read">预览模式（只读）</el-radio>
+          </el-radio-group>
+        </section>
+      </template>
+    </compound>
+
+    <compound>
+      <template #head>
         <h6 class="title">
           {{ t('preferences.general.startup.title') }}
         </h6>
@@ -221,6 +238,11 @@ const {
   fileSortBy,
   language
 } = storeToRefs(preferenceStore)
+
+const defaultEditMode = computed({
+  get: () => preferenceStore.defaultEditMode,
+  set: (value) => preferenceStore.SET_SINGLE_PREFERENCE({ type: 'defaultEditMode', value })
+})
 
 const startUpAction = computed({
   get: () => preferenceStore.startUpAction,

@@ -360,8 +360,8 @@ class App {
 
     const createWindow = () => {
       if (isRestorePathway) {
-        // We will restore based off the previous buffer, one window per buffer store file
-        const bufferStores = editorBufferStore.getAll()
+        // 用 getAllForSession() 而非 getAll()，只恢复上次会话的窗口，避免历史积累的 buffer 文件误触发多余窗口
+        const bufferStores = editorBufferStore.getAllForSession()
         const bufferStoreList = Object.values(bufferStores)
         if (bufferStoreList.length === 0) {
           this._createEditorWindow()

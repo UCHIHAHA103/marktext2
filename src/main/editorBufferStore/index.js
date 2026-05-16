@@ -27,6 +27,45 @@ class EditorBufferStore extends EventEmitter {
     return this.getAllBufferStores()
   }
 
+  /** 写入上次会话清单：记录退出时所有打开窗口的 buffer ID */
+  saveSessionManifest(bufferIds) {
+    const manifestPath = path.join(this.editorBufferStorePath, 'lastSession.json')
+    try {
+      fs.writeFileSync(manifestPath, JSON.stringify(bufferIds || []), 'utf8')
+    } catch (e) {
+      console.error('Failed to save session manifest', e)
+    }
+  }
+
+  /** 读取上次会话清单，返回 buffer ID 数组；不存在时返回 null */
+  getLastSessionIds() {
+    const manifestPath = path.join(this.editorBufferStorePath, 'lastSession.json')
+    try {
+      if (fs.existsSync(manifestPath)) {
+        const ids = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+        if (Array.isArray(ids) && ids.length > 0) return ids
+      }
+    } catch (e) {
+      console.error('Failed to read session manifest', e)
+    }
+    return null
+  }
+
+  /**
+   * 返回"上次会话"对应的 buffer stores（若清单存在则过滤，否则返回全部）
+   * 用于替代 getAll()，避免积累的旧 buffer 文件被误认为上次会话
+   */
+  getAllForSession() {
+    const all = this.getAllBufferStores()
+    const sessionIds = this.getLastSessionIds()
+    if (!sessionIds) return all  // 首次启动，无清单，返回全部
+    const filtered = {}
+    for (const id of sessionIds) {
+      if (all[id]) filtered[id] = all[id]
+    }
+    return filtered
+  }
+
   getAllBufferStores() {
     if (!this.bufferStores) {
       this.bufferStores = this.findEditorBufferStores(this.editorBufferStorePath)
