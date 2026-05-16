@@ -515,8 +515,13 @@ const pasteCtrl = (ContentState) => {
       return this.partialRender()
     }
 
+    // 如果纯文本里有 GFM 表格（header + separator 两行），而 HTML 里没有真正的 <table>，
+    // 强制走 markdownToState，避免 html2State 把管道符当作普通段落文本
+    const hasMdTableInText =
+      /^\|.+\|[ \t]*(?:\r?\n|\r)\|[\s:|-]+\|/m.test(text) && !/<table[\s>]/i.test(html || '')
+
     const stateFragments =
-      type === 'pasteAsPlainText' || copyType === 'onlyMarkdown'
+      type === 'pasteAsPlainText' || copyType === 'onlyMarkdown' || hasMdTableInText
         ? this.markdownToState(text)
         : this.html2State(html)
 
