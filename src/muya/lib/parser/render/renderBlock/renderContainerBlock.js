@@ -156,9 +156,9 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
       // #1869: 标题折叠图标（用 dataset 而非 attrs，toHTML/partialRender 路径也能正确序列化 data-key）
       if (block.hasFoldableContent) {
         const foldIcon = h(
-          'span.ag-fold-icon',
+          `span.ag-fold-icon.${block.folded ? 'is-folded' : 'is-expanded'}`,
           { dataset: { key } },
-          [block.folded ? '▶' : '▼']
+          []
         )
         children.unshift(foldIcon)
       }

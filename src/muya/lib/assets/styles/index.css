@@ -1345,7 +1345,7 @@ i.ag-footnote-backlink {
   display: none !important;
 }
 
-/* #1869: 标题折叠图标 */
+/* #1869: 标题折叠图标（与 frontMenu 子菜单同款边框三角，非 Unicode，避免 Emoji） */
 [data-head] {
   position: relative;
 }
@@ -1355,24 +1355,23 @@ i.ag-footnote-backlink {
   display: inline !important;
 }
 .ag-fold-icon {
-  /* inline-flex：在 heading 内联流中，与 ag-atx-line 同行，始终在 heading 悬停区 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   vertical-align: middle;
   cursor: pointer;
-  font-size: 10px;
-  color: #555 !important;
-  opacity: 0;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   outline: none;
   width: 14px;
-  height: 1.2em;
+  height: 14px;
   margin-right: 2px;
   transition: opacity 0.15s ease;
-  line-height: 1;
+  font-size: 0;
+  line-height: 0;
+  opacity: 0;
+  flex-shrink: 0;
 }
 [data-head]:hover .ag-fold-icon {
   opacity: 0.45;
@@ -1382,6 +1381,27 @@ i.ag-footnote-backlink {
 }
 [data-head]:hover .ag-fold-icon:hover {
   opacity: 1 !important;
+}
+.ag-fold-icon::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.ag-fold-icon.is-folded::before {
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #555;
+}
+.ag-fold-icon.is-folded:hover::before {
+  border-left-color: #333;
+}
+.ag-fold-icon.is-expanded::before {
+  border-width: 6px 4px 0 4px;
+  border-color: #555 transparent transparent transparent;
+}
+.ag-fold-icon.is-expanded:hover::before {
+  border-top-color: #333;
 }
 .ag-hidden-by-fold {
   display: none !important;
