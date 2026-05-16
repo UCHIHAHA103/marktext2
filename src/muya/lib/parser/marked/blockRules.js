@@ -131,6 +131,10 @@ gfm.table = edit(gfm.table)
   .replace('tag', block._tag) // tables can be interrupted by type (6) html blocks
   .getRegex()
 
+// GFM paragraph：在段落续行的负向前瞻里加上 | 开头（表格行）的排除，
+// 防止段落把紧跟其后（无空行）的表格首行吞掉
+gfm.paragraph = new RegExp(block.paragraph.source.replace('(?!', '(?! *\\||'))
+
 /**
  * Pedantic grammar (original John Gruber's loose markdown specification)
  */
