@@ -1,7 +1,7 @@
 <template>
   <div
     class="editor-wrapper"
-    :class="[{ typewriter: typewriter, focus: focus, source: sourceCode }]"
+    :class="[{ typewriter: typewriter, focus: focus, source: sourceCode, 'ag-heading-numbering': headingNumbering }]"
     :style="{
       lineHeight: lineHeight,
       fontSize: `${fontSize}px`,
@@ -199,7 +199,13 @@ const {
 
   // #2451: 默认编辑/阅读模式（运行时状态来自 store）
   defaultEditMode,
-  isReadOnly
+  isReadOnly,
+
+  // #1275: 标题自动编号
+  headingNumbering,
+
+  // #2286: 列表紧凑模式
+  listTightMode
 } = storeToRefs(preferencesStore)
 
 // Editor store refs
@@ -314,6 +320,13 @@ watch(sequenceTheme, (value, oldValue) => {
 watch(listIndentation, (value, oldValue) => {
   if (value !== oldValue && editor.value) {
     editor.value.setListIndentation(value)
+  }
+})
+
+// #2286: 列表紧凑模式变化时同步给 muya
+watch(listTightMode, (value, oldValue) => {
+  if (value !== oldValue && editor.value) {
+    editor.value.setListTightMode(value)
   }
 })
 
@@ -1166,6 +1179,11 @@ onMounted(() => {
   }
 
   editor.value = new Muya(ele, options)
+
+  // #2286: 初始化时同步列表紧凑模式
+  if (listTightMode.value) {
+    editor.value.setListTightMode(true)
+  }
 
   const { container } = editor.value
 

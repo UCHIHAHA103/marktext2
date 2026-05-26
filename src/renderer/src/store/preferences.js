@@ -94,6 +94,9 @@ export const usePreferencesStore = defineStore('preferences', {
     sourceCode: false, // source code mode
     isReadOnly: false, // #2451: 阅读模式（运行时状态，不持久化）
 
+    headingNumbering: false, // #1275: 标题自动编号
+    listTightMode: false, // #2286: 列表项之间不自动加空行
+
     // user configration
     imageFolderPath: '',
     webImages: [],

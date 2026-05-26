@@ -10,12 +10,14 @@
  */
 
 class ExportMarkdown {
-  constructor(blocks, listIndentation = 1, isGitlabCompatibilityEnabled = false) {
+  constructor(blocks, listIndentation = 1, isGitlabCompatibilityEnabled = false, listTightMode = false) {
     this.blocks = blocks
     this.listType = [] // 'ul' or 'ol'
     // helper to translate the first tight item in a nested list
     this.isLooseParentList = true
     this.isGitlabCompatibilityEnabled = !!isGitlabCompatibilityEnabled
+    // #2286: 列表紧凑模式 — 开启时不在列表项之间插入空行
+    this.listTightMode = !!listTightMode
 
     // set and validate settings
     this.listIndentation = 'number'
@@ -96,7 +98,8 @@ class ExportMarkdown {
           break
         }
         case 'li': {
-          const insertNewLine = block.isLooseListItem
+          // #2286: listTightMode 开启时强制视为 tight list，不在列表项前插入空行
+          const insertNewLine = this.listTightMode ? false : block.isLooseListItem
 
           // helper variable to correct the first tight item in a nested list
           this.isLooseParentList = insertNewLine

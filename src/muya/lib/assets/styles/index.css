@@ -1415,6 +1415,50 @@ i.ag-footnote-backlink {
   display: none !important;
 }
 
+/* #1275: 标题自动编号 — 仅在 .ag-heading-numbering 容器下生效，不修改文件内容 */
+.ag-heading-numbering #ag-editor-id {
+  counter-reset: h1counter 0;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h1"] .ag-atx-line {
+  counter-reset: h2counter 0;
+  counter-increment: h1counter;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h2"] .ag-atx-line {
+  counter-reset: h3counter 0;
+  counter-increment: h2counter;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h3"] .ag-atx-line {
+  counter-reset: h4counter 0;
+  counter-increment: h3counter;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h4"] .ag-atx-line {
+  counter-increment: h4counter;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h1"] .ag-atx-line::before {
+  content: counter(h1counter) ". ";
+  font-size: 0.9em;
+  opacity: 0.55;
+  margin-right: 2px;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h2"] .ag-atx-line::before {
+  content: counter(h1counter) "." counter(h2counter) " ";
+  font-size: 0.9em;
+  opacity: 0.55;
+  margin-right: 2px;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h3"] .ag-atx-line::before {
+  content: counter(h1counter) "." counter(h2counter) "." counter(h3counter) " ";
+  font-size: 0.9em;
+  opacity: 0.55;
+  margin-right: 2px;
+}
+.ag-heading-numbering #ag-editor-id [data-head="h4"] .ag-atx-line::before {
+  content: counter(h1counter) "." counter(h2counter) "." counter(h3counter) "." counter(h4counter) " ";
+  font-size: 0.9em;
+  opacity: 0.55;
+  margin-right: 2px;
+}
+
 /* #3764: GitHub Alerts 样式 */
 .ag-github-alert {
   border-left: 4px solid;

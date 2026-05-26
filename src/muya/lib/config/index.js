@@ -382,6 +382,9 @@ export const PREVIEW_DOMPURIFY_CONFIG = Object.freeze({
     svgFilters: true,
     mathMl: false
   },
+  // #925: 允许 iframe 渲染（B站/YouTube嵌入、地图、在线演示等）
+  ADD_TAGS: ['iframe'],
+  ADD_ATTR: ['src', 'srcdoc', 'allowfullscreen', 'allow', 'frameborder', 'scrolling', 'width', 'height', 'referrerpolicy', 'loading'],
   RETURN_TRUSTED_TYPE: false
 })
 

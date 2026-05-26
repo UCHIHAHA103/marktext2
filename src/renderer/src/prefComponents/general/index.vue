@@ -103,6 +103,24 @@
 
     <compound>
       <template #head>
+        <h6 class="title">编辑器显示</h6>
+      </template>
+      <template #children>
+        <bool
+          description="标题自动编号（1. / 1.1 / 1.1.1 层级编号，仅影响显示，不修改文件内容）"
+          :bool="headingNumbering"
+          :on-change="(value) => onSelectChange('headingNumbering', value)"
+        />
+        <bool
+          description="列表项之间不自动添加空行（保持紧凑列表格式，防止保存时插入多余空行）"
+          :bool="listTightMode"
+          :on-change="(value) => onSelectChange('listTightMode', value)"
+        />
+      </template>
+    </compound>
+
+    <compound>
+      <template #head>
         <h6 class="title">打开文档默认模式</h6>
       </template>
       <template #children>
@@ -233,6 +251,8 @@ const {
   autoSave,
   autoSaveDelay,
   autoReloadOnChange,
+  headingNumbering,
+  listTightMode,
   titleBarStyle,
   defaultDirectoryToOpen,
   openFilesInNewWindow,

@@ -160,8 +160,8 @@ class Muya {
 
   getMarkdown() {
     const blocks = this.contentState.getBlocks()
-    const { isGitlabCompatibilityEnabled, listIndentation } = this.contentState
-    return new ExportMarkdown(blocks, listIndentation, isGitlabCompatibilityEnabled).generate()
+    const { isGitlabCompatibilityEnabled, listIndentation, listTightMode } = this.contentState
+    return new ExportMarkdown(blocks, listIndentation, isGitlabCompatibilityEnabled, listTightMode).generate()
   }
 
   getHistory() {
@@ -283,6 +283,10 @@ class Muya {
       tabSize = 4
     }
     this.contentState.tabSize = tabSize
+  }
+
+  setListTightMode(enabled) {
+    this.contentState.listTightMode = !!enabled
   }
 
   setListIndentation(listIndentation) {
