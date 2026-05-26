@@ -3,7 +3,7 @@ import fsPromises from 'fs/promises'
 import { exec } from 'child_process'
 import dayjs from 'dayjs'
 import log from 'electron-log'
-import { app, BrowserWindow, clipboard, dialog, nativeTheme, shell, ipcMain } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, nativeImage, nativeTheme, shell, ipcMain } from 'electron'
 import { isChildOfDirectory } from 'common/filesystem/paths'
 import { isLinux, isOsx, isWindows } from '../config'
 import parseArgs from '../cli/parser'
@@ -798,6 +798,28 @@ class App {
 
     ipcMain.handle('mt::fs-trash-item', async(event, fullPath) => {
       return shell.trashItem(fullPath)
+    })
+
+    // 通过主进程把图片位图写入系统剪贴板（渲染进程直接调用已弃用）
+    ipcMain.handle('mt::write-image-to-clipboard', (event, dataUrl) => {
+      try {
+        const ni = nativeImage.createFromDataURL(dataUrl)
+        clipboard.writeImage(ni)
+        return true
+      } catch (e) {
+        console.error('[clipboard] 写图片失败:', e)
+        return false
+      }
+    })
+
+    // 通过主进程读取剪贴板里的文件路径（避免渲染进程 @electron/remote UTF-16 解码错误）
+    ipcMain.handle('mt::get-clipboard-filepath', () => {
+      try {
+        // readFilePaths 是 Electron 原生 API，正确处理 UTF-16 路径
+        const files = clipboard.readFilePaths()
+        if (files && files.length > 0) return files[0]
+      } catch (_) {}
+      return ''
     })
   }
 }

@@ -284,8 +284,12 @@ function saveImage() {
 
 function handleKeydown(e) {
   if (!props.visible) return
+  // 灯箱打开时，吞掉键盘事件，不让 muya 处理
+  e.stopImmediatePropagation()
+  e.preventDefault()
   switch (e.key) {
     case 'Escape':
+    case ' ':
       close()
       break
     case 'ArrowLeft':
@@ -311,7 +315,7 @@ function handleKeydown(e) {
       break
     case 's':
     case 'S':
-      saveImage()
+      if (!e.ctrlKey && !e.metaKey) saveImage()
       break
     case 'c':
     case 'C':
@@ -321,11 +325,12 @@ function handleKeydown(e) {
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
+  // capture:true 确保在 muya 的冒泡阶段处理之前先拦截
+  document.addEventListener('keydown', handleKeydown, true)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('keydown', handleKeydown, true)
   document.removeEventListener('mousemove', onDragMove)
   document.removeEventListener('mouseup', stopDrag)
 })

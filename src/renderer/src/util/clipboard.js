@@ -1,28 +1,15 @@
-import { isLinux, isOsx, isWindows } from './index'
-import plist from 'plist'
-import { clipboard as remoteClipboard } from '@electron/remote'
+import { isLinux } from './index'
 
-const hasClipboardFiles = () => {
-  return remoteClipboard.has('NSFilenamesPboardType')
-}
-
-const getClipboardFiles = () => {
-  if (!hasClipboardFiles()) {
-    return []
-  }
-  return plist.parse(remoteClipboard.read('NSFilenamesPboardType'))
-}
-
-export const guessClipboardFilePath = () => {
+// 通过主进程 IPC 读取剪贴板中的文件路径，避免 @electron/remote 对
+// Windows UTF-16LE 路径（含中文）的解码错误
+export const guessClipboardFilePath = async () => {
   if (isLinux) return ''
-  if (isOsx) {
-    const result = getClipboardFiles()
-    return Array.isArray(result) && result.length ? result[0] : ''
-  } else if (isWindows) {
-    const rawFilePath = remoteClipboard.read('FileNameW')
-    const filePath = rawFilePath.replace(new RegExp(String.fromCharCode(0), 'g'), '')
-    return filePath && typeof filePath === 'string' ? filePath : ''
-  } else {
-    return ''
+  try {
+    if (window.electron && window.electron.ipcRenderer) {
+      return await window.electron.ipcRenderer.invoke('mt::get-clipboard-filepath')
+    }
+  } catch (e) {
+    console.error('[clipboard] 读取剪贴板文件路径失败:', e)
   }
+  return ''
 }

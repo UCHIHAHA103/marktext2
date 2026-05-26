@@ -324,7 +324,7 @@ const copyCutCtrl = (ContentState) => {
         imageEl.naturalWidth > 0 &&
         typeof window !== 'undefined' &&
         window.electron &&
-        window.electron.nativeImage
+        window.electron.ipcRenderer
       ) {
         try {
           const canvas = document.createElement('canvas')
@@ -333,14 +333,19 @@ const copyCutCtrl = (ContentState) => {
           const ctx = canvas.getContext('2d')
           ctx.drawImage(imageEl, 0, 0)
           const dataUrl = canvas.toDataURL('image/png')
-          const nativeImg = window.electron.nativeImage.createFromDataURL(dataUrl)
-          window.electron.clipboard.writeImage(nativeImg)
+          console.log('[copy-image] canvas 生成成功，宽:', imageEl.naturalWidth, '高:', imageEl.naturalHeight, '发送IPC...')
+          // 通过主进程写入剪贴板（渲染进程直接调用 clipboard.writeImage 已弃用）
+          window.electron.ipcRenderer.invoke('mt::write-image-to-clipboard', dataUrl)
+            .then(ok => console.log('[copy-image] IPC 写剪贴板结果:', ok))
+            .catch(e => console.error('[copy-image] IPC 失败:', e))
           event.clipboardData.setData('text/plain', '')
           event.clipboardData.setData('text/html', '')
           return
         } catch (e) {
-          console.error('写入图片到剪贴板失败，降级为文本', e)
+          console.error('[copy-image] canvas 处理失败，降级为文本', e)
         }
+      } else {
+        console.warn('[copy-image] 无法复制图片位图：imageEl=', imageEl, 'ipcRenderer=', !!(window.electron && window.electron.ipcRenderer))
       }
       // 降级：写入 Markdown 语法
       const { token } = selectedImage
