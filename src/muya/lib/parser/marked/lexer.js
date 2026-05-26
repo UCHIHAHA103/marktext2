@@ -138,8 +138,10 @@ Lexer.prototype.token = function(
     if (cap) {
       src = src.substring(cap[0].length)
       if (cap[0].length > 1) {
+        // #1354: 记录实际空行数量（cap[0] 是连续 \n，空行数 = \n数-1）
         this.tokens.push({
-          type: 'space'
+          type: 'space',
+          count: cap[0].length - 1
         })
       }
     }

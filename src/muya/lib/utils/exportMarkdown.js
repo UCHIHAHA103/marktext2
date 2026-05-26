@@ -48,7 +48,7 @@ class ExportMarkdown {
       switch (block.type) {
         case 'p':
         case 'hr': {
-          this.insertLineBreak(result, indent)
+          this.insertLineBreak(result, indent, block.precedingBlankLines)
           result.push(this.translateBlocks2Markdown(block.children, indent))
           break
         }
@@ -62,12 +62,12 @@ class ExportMarkdown {
         case 'h4':
         case 'h5':
         case 'h6': {
-          this.insertLineBreak(result, indent)
+          this.insertLineBreak(result, indent, block.precedingBlankLines)
           result.push(this.normalizeHeaderText(block, indent))
           break
         }
         case 'figure': {
-          this.insertLineBreak(result, indent)
+          this.insertLineBreak(result, indent, block.precedingBlankLines)
           switch (block.functionType) {
             case 'table': {
               const table = block.children[0]
@@ -149,7 +149,7 @@ class ExportMarkdown {
           break
         }
         case 'pre': {
-          this.insertLineBreak(result, indent)
+          this.insertLineBreak(result, indent, block.precedingBlankLines)
           if (block.functionType === 'frontmatter') {
             result.push(this.normalizeFrontMatter(block, indent))
           } else {
@@ -158,7 +158,7 @@ class ExportMarkdown {
           break
         }
         case 'blockquote': {
-          this.insertLineBreak(result, indent)
+          this.insertLineBreak(result, indent, block.precedingBlankLines)
           result.push(this.normalizeBlockquote(block, indent))
           break
         }
@@ -171,16 +171,18 @@ class ExportMarkdown {
     return result.join('')
   }
 
-  insertLineBreak(result, indent) {
+  insertLineBreak(result, indent, precedingBlankLines) {
     if (!result.length) return
-    // #1354: 确保块与块之间始终有一个完整的空行（两个换行符）
-    // 上一个块的文本已以 \n 结尾，再加一个 \n → 合计 \n\n = 一个空行
-    // 若上一个块文本不以 \n 结尾（edge case），则加两个 \n 以保证空行存在
+    // #1354: 保留原文件中的空行数量（最少1个，最多5个），让保存后格式不被破坏
+    // precedingBlankLines 来自 importMarkdown 从 Lexer space token 读取的实际空行数
+    const blankCount = Math.max(1, Math.min(precedingBlankLines || 1, 5))
     const last = result[result.length - 1]
     if (typeof last === 'string' && !last.endsWith('\n')) {
-      result.push(`${indent}\n\n`)
+      // 上一块未以 \n 结尾：先补 \n，再加 blankCount 个空行
+      result.push('\n' + `${indent}\n`.repeat(blankCount))
     } else {
-      result.push(`${indent}\n`)
+      // 上一块已以 \n 结尾：直接加 blankCount 个空行（每个空行 = 一个 \n）
+      result.push(`${indent}\n`.repeat(blankCount))
     }
   }
 

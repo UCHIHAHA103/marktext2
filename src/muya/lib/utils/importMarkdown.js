@@ -106,8 +106,16 @@ const importRegister = (ContentState) => {
     let block
     let value
     const parentList = [rootState]
+    // #1354: 追踪当前 block 前有多少空行，附到 block.precedingBlankLines
+    let pendingBlankLines = 0
 
     while ((token = tokens.shift())) {
+      // 先把上一个 space token 攒的空行数拿出来，供本次 block 使用
+      const blankLinesBefore = pendingBlankLines
+      pendingBlankLines = 0
+      // 记录 switch 前的父节点和子节点数，switch 后检测是否新增了 block
+      const parentBeforeSwitch = parentList[0]
+      const childCountBefore = parentBeforeSwitch.children.length
       switch (token.type) {
         case 'frontmatter': {
           const { lang, style } = token
@@ -422,12 +430,20 @@ const importRegister = (ContentState) => {
         }
 
         case 'space': {
+          // #1354: 把空行数存起来，留给下一个 block
+          pendingBlankLines = Math.min(token.count || 1, 5)
           break
         }
 
         default:
           console.warn(`Unknown type ${token.type}`)
           break
+      }
+
+      // #1354: 如果这次 switch 在当前父节点下新增了 block，把空行数挂到该 block
+      if (blankLinesBefore > 0 && parentBeforeSwitch.children.length > childCountBefore) {
+        const newBlock = parentBeforeSwitch.children[parentBeforeSwitch.children.length - 1]
+        newBlock.precedingBlankLines = blankLinesBefore
       }
     }
 
