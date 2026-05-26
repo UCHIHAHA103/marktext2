@@ -276,13 +276,11 @@ const copyCutCtrl = (ContentState) => {
       }
     }
     let richHtml = wrapper.innerHTML
-    // 去掉 HTML 注释的三种形态，飞书等富文本编辑器会把注释显示为文本：
-    // 1. 真实 HTML 注释节点
+    // 去掉 HTML 注释的各种形态，飞书等富文本编辑器会把注释显示为文本：
+    // 1. 真实 HTML 注释节点（<!-- ... -->）
     richHtml = richHtml.replace(/<!--[\s\S]*?-->/g, '')
-    // 2. Muya 把 HTML block 存成 pre + textContent，序列化后是转义形式
-    richHtml = richHtml.replace(/<pre[^>]*>&lt;!--[\s\S]*?--&gt;<\/pre>/gi, '')
-    // 3. p 包裹的转义注释
-    richHtml = richHtml.replace(/<p[^>]*>&lt;!--[\s\S]*?--&gt;<\/p>/gi, '')
+    // 2. 转义形式的注释（&lt;!-- ... --&gt;），可能出现在 pre/p/div/code 等任意元素内
+    richHtml = richHtml.replace(/&lt;!--[\s\S]*?--&gt;/g, '')
 
     return { html: richHtml, text: textData }
   }
