@@ -173,6 +173,11 @@ class QuickInsert extends BaseScrollFloat {
       case 'paragraph':
         contentState.partialRender()
         break
+      case 'image':
+        // 触发图片插入（同 formatPicker 里的 image 行为）
+        contentState.partialRender()
+        contentState.format('image')
+        break
       case 'date-today': {
         // #2855: 插入今日日期 YYYY-MM-DD
         const now = new Date()

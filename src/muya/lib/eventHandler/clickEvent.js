@@ -1,6 +1,7 @@
 import { operateClassName } from '../utils/domManipulate'
 import { getImageInfo } from '../utils/getImageInfo'
 import { CLASS_OR_ID } from '../config'
+import { getParagraphReference } from '../utils'
 import selection from '../selection'
 
 class ClickEvent {
@@ -129,6 +130,21 @@ class ClickEvent {
         event.stopPropagation()
         event.preventDefault()
         return this.muya.contentState.copyCodeBlock(event)
+      }
+      // 点击语言输入框时立即弹出语言选择下拉（飞书式代码块语言选择）
+      const langInput = target.closest(`.${CLASS_OR_ID.AG_LANGUAGE_INPUT}`)
+      if (langInput) {
+        const { contentState } = this.muya
+        const { lang, paragraph } = contentState.checkEditLanguage()
+        if (lang !== null && paragraph) {
+          eventCenter.dispatch('muya-code-picker', {
+            reference: getParagraphReference(paragraph, paragraph.id),
+            lang: lang || '',
+            cb: (item) => {
+              contentState.selectLanguage(paragraph, item.name)
+            }
+          })
+        }
       }
       // Handle delete inline iamge by click delete icon.
       if (imageDelete && imageWrapper) {

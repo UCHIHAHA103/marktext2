@@ -6,6 +6,7 @@ class MouseEvent {
     this.muya = muya
     this.mouseBinding()
     this.mouseDown()
+    this.mouseUp()
   }
 
   mouseBinding() {
@@ -98,6 +99,30 @@ class MouseEvent {
       }
     }
     eventCenter.attachDOMEvent(container, 'mousedown', handler)
+  }
+
+  mouseUp() {
+    // 鼠标抬起时检测是否有文字选中，有则触发浮动格式工具栏
+    const { container, eventCenter, contentState } = this.muya
+    const handler = () => {
+      const { anchor, focus } = contentState.cursor
+      if (!anchor || !focus) return
+      const block = contentState.getBlock(anchor.key)
+      if (!block) return
+      if (
+        anchor.key === focus.key &&
+        anchor.offset !== focus.offset &&
+        block.functionType !== 'codeContent' &&
+        block.functionType !== 'languageInput'
+      ) {
+        const reference = contentState.getPositionReference()
+        const { formats } = contentState.selectionFormats()
+        eventCenter.dispatch('muya-format-picker', { reference, formats })
+      } else {
+        eventCenter.dispatch('muya-format-picker', { reference: null })
+      }
+    }
+    eventCenter.attachDOMEvent(container, 'mouseup', handler)
   }
 }
 

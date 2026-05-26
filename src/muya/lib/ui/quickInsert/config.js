@@ -1,4 +1,5 @@
 import paragraphIcon from '../../assets/pngicon/paragraph/2.png'
+import imageIcon from '../../assets/pngicon/format_image/2.png'
 import htmlIcon from '../../assets/pngicon/html/2.png'
 import hrIcon from '../../assets/pngicon/horizontal_line/2.png'
 import frontMatterIcon from '../../assets/pngicon/front_matter/2.png'
@@ -45,6 +46,12 @@ export const createQuickInsertObj = (t) => {
       label: 'paragraph',
       shortCut: `${COMMAND_KEY}+0`,
       icon: paragraphIcon
+    }, {
+      title: '插入图片',
+      subTitle: 'Insert an image from local disk or URL',
+      label: 'image',
+      shortCut: `${SHIFT_KEY}+${COMMAND_KEY}+I`,
+      icon: imageIcon
     }, {
       title: '今日日期',
       subTitle: 'Insert current date (YYYY-MM-DD)',

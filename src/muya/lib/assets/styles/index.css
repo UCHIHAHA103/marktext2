@@ -516,6 +516,50 @@ table {
   margin-top: 0;
 }
 
+/* 表格行/列操作 drag bar */
+table tr td:first-child,
+table tr th:first-child {
+  position: relative;
+}
+
+table tr:last-child td,
+table tr:last-child th {
+  position: relative;
+}
+
+.ag-drag-handler {
+  display: block;
+  position: absolute;
+  cursor: pointer;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.15s;
+  border-radius: 3px;
+  background: var(--themeColor, #4078c8);
+}
+
+table:hover .ag-drag-handler {
+  opacity: 0.35;
+}
+
+.ag-drag-handler:hover {
+  opacity: 0.9 !important;
+}
+
+.ag-drag-handler.left {
+  left: -12px;
+  top: 2px;
+  width: 6px;
+  height: calc(100% - 4px);
+}
+
+.ag-drag-handler.bottom {
+  bottom: -12px;
+  left: 2px;
+  height: 6px;
+  width: calc(100% - 4px);
+}
+
 li.ag-task-list-item {
   list-style-type: none;
   position: relative;

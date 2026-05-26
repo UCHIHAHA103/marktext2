@@ -349,6 +349,32 @@ const pasteCtrl = (ContentState) => {
     const textBeforeCursor = startBlock ? startBlock.text.substring(0, start.offset) : ''
     const insideLinkHref = /\]\($/.test(textBeforeCursor) || /\]\([^)]*$/.test(textBeforeCursor)
 
+    // 飞书式智能粘贴：选中文字 + 粘贴 URL → 自动把选中文字包裹成超链接 [text](url)
+    const hasSelection = start.key === end.key && start.offset !== end.offset
+    if (
+      hasSelection &&
+      URL_REG.test(text) &&
+      !/\s/.test(text) &&
+      !html &&
+      !insideLinkHref &&
+      startBlock
+    ) {
+      const selectedText = startBlock.text.substring(start.offset, end.offset)
+      const linkMarkdown = `[${selectedText}](${text})`
+      startBlock.text =
+        startBlock.text.substring(0, start.offset) +
+        linkMarkdown +
+        startBlock.text.substring(end.offset)
+      const newOffset = start.offset + linkMarkdown.length
+      this.cursor = {
+        start: { key: start.key, offset: newOffset },
+        end: { key: start.key, offset: newOffset },
+        isEdit: true
+      }
+      this.partialRender()
+      return
+    }
+
     // Support pasted URLs from Firefox.
     if (URL_REG.test(text) && !/\s/.test(text) && !html && !insideLinkHref) {
       html = `<a href="${text}">${text}</a>`
