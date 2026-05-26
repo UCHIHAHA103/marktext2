@@ -318,35 +318,49 @@ const copyCutCtrl = (ContentState) => {
           }
         }
       }
-      console.log('[copy-image] selectedImage:', selectedImage.absoluteImagePath, 'imageEl:', imageEl)
-      if (
-        imageEl &&
-        imageEl.complete &&
-        imageEl.naturalWidth > 0 &&
-        typeof window !== 'undefined' &&
-        window.electron &&
-        window.electron.ipcRenderer
-      ) {
-        try {
-          const canvas = document.createElement('canvas')
-          canvas.width = imageEl.naturalWidth
-          canvas.height = imageEl.naturalHeight
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(imageEl, 0, 0)
-          const dataUrl = canvas.toDataURL('image/png')
-          console.log('[copy-image] canvas 生成成功，宽:', imageEl.naturalWidth, '高:', imageEl.naturalHeight, '发送IPC...')
-          // 通过主进程写入系统剪贴板
-          // 注意：不能调 event.clipboardData.setData()，否则 Chromium 内部剪贴板会
-          // 被清空，从而覆盖掉 IPC 的写入，导致粘贴时剪贴板为空
-          window.electron.ipcRenderer.invoke('mt::write-image-to-clipboard', dataUrl)
-            .then(ok => console.log('[copy-image] IPC 写剪贴板结果:', ok))
-            .catch(e => console.error('[copy-image] IPC 失败:', e))
-          return  // 不再调 setData，只靠 IPC
-        } catch (e) {
-          console.error('[copy-image] canvas 处理失败，降级为文本', e)
+      const absUrl = selectedImage.absoluteImagePath || ''
+      console.log('[copy-image] selectedImage:', absUrl, 'imageEl:', imageEl)
+
+      if (typeof window !== 'undefined' && window.electron && window.electron.ipcRenderer) {
+        // 优先路径：对本地 file:// 图片，直接传路径给主进程用 nativeImage.createFromPath 读文件
+        // 避免 canvas→dataUrl→IPC 传输超大 base64（大图可达几百 MB，IPC 无法承受）
+        if (absUrl.startsWith('file://')) {
+          const cleanUrl = absUrl.split('?')[0]                   // 去掉 ?msec= 参数
+          let localPath = ''
+          if (cleanUrl.startsWith('file:///')) {
+            localPath = decodeURIComponent(cleanUrl.slice(8))     // file:/// 后面是 C:/...
+          } else if (cleanUrl.startsWith('file://')) {
+            localPath = decodeURIComponent(cleanUrl.slice(7))
+          }
+          if (localPath) {
+            console.log('[copy-image] 使用文件路径方式，path:', localPath)
+            window.electron.ipcRenderer.invoke('mt::write-image-file-to-clipboard', localPath)
+              .then(ok => console.log('[copy-image] 文件路径 IPC 结果:', ok, localPath))
+              .catch(e => console.error('[copy-image] 文件路径 IPC 失败:', e))
+            return
+          }
+        }
+
+        // 降级：canvas→dataUrl 方式（适用于 blob: / data: URL）
+        if (imageEl && imageEl.complete && imageEl.naturalWidth > 0) {
+          try {
+            const canvas = document.createElement('canvas')
+            canvas.width = imageEl.naturalWidth
+            canvas.height = imageEl.naturalHeight
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(imageEl, 0, 0)
+            const dataUrl = canvas.toDataURL('image/png')
+            console.log('[copy-image] canvas 方式，宽:', imageEl.naturalWidth, '高:', imageEl.naturalHeight)
+            window.electron.ipcRenderer.invoke('mt::write-image-to-clipboard', dataUrl)
+              .then(ok => console.log('[copy-image] canvas IPC 结果:', ok))
+              .catch(e => console.error('[copy-image] canvas IPC 失败:', e))
+            return
+          } catch (e) {
+            console.error('[copy-image] canvas 处理失败，降级为文本', e)
+          }
         }
       } else {
-        console.warn('[copy-image] 无法复制图片位图：imageEl=', imageEl, 'ipcRenderer=', !!(window.electron && window.electron.ipcRenderer))
+        console.warn('[copy-image] ipcRenderer 不可用，imageEl:', imageEl)
       }
       // 降级：写入 Markdown 语法
       const { token } = selectedImage

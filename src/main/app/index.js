@@ -812,6 +812,23 @@ class App {
       }
     })
 
+    // 从本地文件路径写图片到剪贴板（适合大图，避免 IPC 传输巨大 dataUrl）
+    ipcMain.handle('mt::write-image-file-to-clipboard', async (event, filePath) => {
+      try {
+        const ni = nativeImage.createFromPath(filePath)
+        if (ni.isEmpty()) {
+          console.error('[clipboard] nativeImage.createFromPath 返回空图片:', filePath)
+          return false
+        }
+        clipboard.writeImage(ni)
+        console.log('[clipboard] 文件路径写剪贴板成功:', filePath)
+        return true
+      } catch (e) {
+        console.error('[clipboard] 文件路径写图片失败:', e)
+        return false
+      }
+    })
+
     // 通过主进程读取剪贴板里的文件路径（避免渲染进程 @electron/remote UTF-16 解码错误）
     ipcMain.handle('mt::get-clipboard-filepath', () => {
       try {
