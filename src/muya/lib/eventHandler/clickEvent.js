@@ -154,9 +154,19 @@ class ClickEvent {
 
       // Handle image click, to select the current image
       if (target.tagName === 'IMG' && imageWrapper) {
-        // Handle select image
         const imageInfo = getImageInfo(imageWrapper)
         event.preventDefault()
+
+        // 第二次点击已选中的图片 → 打开灯箱预览
+        if (
+          contentState.selectedImage &&
+          contentState.selectedImage.imageId === imageInfo.imageId
+        ) {
+          eventCenter.dispatch('muya-image-lightbox', { imageInfo })
+          return
+        }
+
+        // 第一次点击：选中图片（鼠标变放大镜由 CSS 控制）
         eventCenter.dispatch('select-image', imageInfo)
         // Handle show image toolbar
         const rect = imageWrapper.querySelector('.ag-image-container').getBoundingClientRect()

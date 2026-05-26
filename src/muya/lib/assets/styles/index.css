@@ -1062,6 +1062,14 @@ span.ag-warn.ag-emoji-marked-text {
 
 .ag-inline-image.ag-image-success.ag-inline-image-selected .ag-image-container img {
   filter: brightness(80%);
+  cursor: zoom-in;
+}
+
+/* 选中态：整个图片区域提示可点击放大 */
+.ag-inline-image.ag-image-success.ag-inline-image-selected {
+  outline: 2px solid var(--themeColor, #409eff);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .ag-inline-image.ag-image-uploading .ag-image-container img {

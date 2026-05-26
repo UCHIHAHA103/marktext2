@@ -124,13 +124,18 @@ class Keyboard {
           return contentState.docEnterHandler(event)
         case EVENT_KEYS.Space: {
           if (contentState.selectedImage) {
-            const { token } = contentState.selectedImage
-            const { src } = getImageInfo(token.src || token.attrs.src)
-            if (src) {
-              eventCenter.dispatch('preview-image', {
-                data: src
-              })
-            }
+            // Space：打开灯箱预览
+            eventCenter.dispatch('muya-image-lightbox', { imageInfo: contentState.selectedImage })
+          }
+          break
+        }
+        case EVENT_KEYS.KeyC: {
+          // Ctrl/Cmd+C：复制选中图片
+          if ((event.ctrlKey || event.metaKey) && contentState.selectedImage) {
+            event.preventDefault()
+            event.stopPropagation()
+            eventCenter.dispatch('copy-selected-image', { imageInfo: contentState.selectedImage })
+            return
           }
           break
         }

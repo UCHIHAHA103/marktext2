@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useEditorStore } from '@/store/editor'
 import { useLayoutStore } from '@/store/layout'
 import { storeToRefs } from 'pinia'
@@ -72,7 +72,16 @@ const tabDropContainer = ref(null)
 let autoScroller = null
 let drake = null
 
-// Computed properties
+// 当前激活标签变化时，自动滚动使其可见
+watch(currentFile, () => {
+  nextTick(() => {
+    if (!tabContainer.value) return
+    const activeTab = tabContainer.value.querySelector('li.active')
+    if (activeTab) {
+      activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+    }
+  })
+})
 
 // Methods incorporated from tabsMixins
 const selectFile = (file) => {

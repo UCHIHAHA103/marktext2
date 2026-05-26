@@ -215,11 +215,16 @@ const imageCtrl = (ContentState) => {
       end: { key, offset: imageInfo.token.range.end },
       isEdit: false
     }
-    // Fix #1568
-    const { start } = this.prevCursor
-    const oldBlock = this.findOutMostBlock(this.getBlock(start.key))
-    if (oldBlock.key !== outMostBlock.key) {
-      this.singleRender(oldBlock, false)
+    // Fix #1568 - prevCursor 可能为 null（首次点击图片时无历史光标）
+    if (this.prevCursor && this.prevCursor.start) {
+      const { start } = this.prevCursor
+      const prevBlock = this.getBlock(start.key)
+      if (prevBlock) {
+        const oldBlock = this.findOutMostBlock(prevBlock)
+        if (oldBlock && oldBlock.key !== outMostBlock.key) {
+          this.singleRender(oldBlock, false)
+        }
+      }
     }
 
     return this.singleRender(outMostBlock, true)

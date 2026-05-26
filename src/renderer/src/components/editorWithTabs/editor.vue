@@ -82,6 +82,13 @@
       </template>
     </el-dialog>
     <editor-search v-if="!sourceCode" />
+    <!-- 图片灯箱预览 -->
+    <image-lightbox
+      :visible="lightboxVisible"
+      :images="lightboxImages"
+      :initial-src="lightboxInitialSrc"
+      @close="lightboxVisible = false"
+    />
   </div>
 </template>
 
@@ -104,6 +111,7 @@ import FootnoteTool from 'muya/lib/ui/footnoteTool'
 import TableBarTools from 'muya/lib/ui/tableTools'
 import FrontMenu from 'muya/lib/ui/frontMenu'
 import EditorSearch from '../search'
+import ImageLightbox from '../imageLightbox.vue'
 import bus from '@/bus'
 import { DEFAULT_EDITOR_FONT_FAMILY } from '@/config'
 import notice from '@/services/notification'
@@ -207,6 +215,11 @@ const editor = ref(null)
 const isShowClose = ref(false)
 const dialogTableVisible = ref(false)
 const imageViewerVisible = ref(null)
+
+// 图片灯箱状态
+const lightboxVisible = ref(false)
+const lightboxImages = ref([])
+const lightboxInitialSrc = ref('')
 const tableChecker = reactive({
   rows: 4,
   columns: 3
@@ -624,6 +637,57 @@ const setImageViewerVisible = (status) => {
   imageViewerVisible.value = status
 }
 
+// 收集编辑器内所有已渲染图片，用于灯箱导航
+const collectEditorImages = () => {
+  if (!editor.value) return []
+  const container = editor.value.container
+  const wrappers = Array.from(container.querySelectorAll('.ag-inline-image'))
+  const seen = new Set()
+  const result = []
+  for (const wrapper of wrappers) {
+    const img = wrapper.querySelector('img[src]')
+    if (img && img.src && !seen.has(img.src)) {
+      seen.add(img.src)
+      result.push({ src: img.src })
+    }
+  }
+  return result
+}
+
+const showLightboxForSrc = (src) => {
+  if (!src) return
+  const images = collectEditorImages()
+  lightboxImages.value = images.length > 0 ? images : [{ src }]
+  lightboxInitialSrc.value = src
+  lightboxVisible.value = true
+}
+
+const copyImageFromUrl = async (src) => {
+  try {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+      img.src = src
+    })
+    const canvas = document.createElement('canvas')
+    canvas.width = img.naturalWidth
+    canvas.height = img.naturalHeight
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(img, 0, 0)
+    canvas.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      } catch {
+        navigator.clipboard.writeText(src).catch(() => {})
+      }
+    }, 'image/png')
+  } catch (e) {
+    console.error('复制图片失败', e)
+  }
+}
+
 const switchSpellcheckLanguage = (languageCode) => {
   const { isEnabled } = spellchecker
 
@@ -937,8 +1001,12 @@ const setMarkdownToEditor = ({ markdown: newMarkdown, cursor: newCursor }) => {
     } else {
       editor.value.setMarkdown(newMarkdown)
     }
-    // #2451: 每次加载新文件时应用默认模式，确保新标签遵循偏好设置
-    if (defaultEditMode.value === 'read') {
+    // 新建未命名文件始终进入编辑模式（用户新建是为了编辑）
+    // 已有路径的文件才遵循 defaultEditMode 偏好
+    const isNewUntitled = !currentFile.value.pathname
+    if (isNewUntitled) {
+      preferencesStore.SET_MODE({ type: 'isReadOnly', checked: false })
+    } else if (defaultEditMode.value === 'read') {
       preferencesStore.SET_MODE({ type: 'isReadOnly', checked: true })
     }
   }
@@ -968,14 +1036,15 @@ const handleFileChange = ({
     }
 
     if (typeof scrollTop === 'number' && scrollTop > 0) {
-      // 仅在需要滚动到非零位置时才隐藏容器（避免 scrollTop=0 时 visibility 卡在 hidden）
+      // 恢复上次保存的滚动位置
       container.style.visibility = 'hidden'
       container.style.pointerEvents = 'none'
       scrollToCords(scrollTop)
     } else {
+      // 无保存位置时滚动到顶部（避免跟随光标跳到文档中间/末尾）
       container.style.visibility = 'visible'
       container.style.pointerEvents = 'auto'
-      scrollToCursor(0)
+      nextTick(() => { container.scrollTop = 0 })
     }
   }
 }
@@ -1169,33 +1238,22 @@ onMounted(() => {
     if (formatType === 'link' && ctrlOrMeta) {
       editorStore.FORMAT_LINK_CLICK({ data, dirname: window.DIRNAME })
     } else if (formatType === 'image' && ctrlOrMeta) {
-      if (imageViewer) {
-        imageViewer.destroy()
-      }
-
-      // Disabled due to #2120.
-      // imageViewer = new ViewImage(imageViewerRef.value, {
-      //   url: data,
-      //   snapView: true
-      // })
-
-      setImageViewerVisible(true)
+      // Ctrl+点击图片：直接打开灯箱
+      showLightboxForSrc(data)
     }
   })
 
-  // Disabled due to #2120.
-  // editor.value.on('preview-image', ({ data }) => {
-  //   if (imageViewer) {
-  //     imageViewer.destroy()
-  //   }
-  //
-  //   imageViewer = new ViewImage(imageViewerRef.value, {
-  //     url: data,
-  //     snapView: true
-  //   })
-  //
-  //   setImageViewerVisible(true)
-  // })
+  // 图片灯箱：由 clickEvent 或 keyboard（Space键）触发
+  editor.value.on('muya-image-lightbox', ({ imageInfo }) => {
+    const src = imageInfo.absoluteImagePath || (imageInfo.token && imageInfo.token.attrs && imageInfo.token.attrs.src)
+    showLightboxForSrc(src)
+  })
+
+  // 选中图片 Ctrl+C 复制
+  editor.value.on('copy-selected-image', ({ imageInfo }) => {
+    const src = imageInfo.absoluteImagePath || (imageInfo.token && imageInfo.token.attrs && imageInfo.token.attrs.src)
+    if (src) copyImageFromUrl(src)
+  })
 
   editor.value.on('selectionChange', (changes) => {
     const { y } = changes.cursorCoords
