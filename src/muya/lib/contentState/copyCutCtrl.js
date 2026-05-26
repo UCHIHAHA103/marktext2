@@ -111,6 +111,9 @@ const copyCutCtrl = (ContentState) => {
       }
     }
 
+    // cleanSrc（去掉 file:// 和 ?msec=）→ data URL 的映射，用于富文本粘贴时内嵌图片
+    const imgDataUrlMap = new Map()
+
     const imageWrappers = wrapper.querySelectorAll('span.ag-inline-image')
     for (const imageWrapper of imageWrappers) {
       const dataRaw = imageWrapper.getAttribute('data-raw')
@@ -135,12 +138,34 @@ const copyCutCtrl = (ContentState) => {
         }
       }
 
-      image.setAttribute(
-        'src',
-        finalSrc
-          .replace('file://', '') // We should not include file:// in the copied image path since markdown should not have the protocol specified
-          .replace(/\?msec=\d+/, '') // We also want to remove the "msec" query parameter used for cache busting
-      )
+      const cleanSrc = finalSrc
+        .replace('file://', '') // We should not include file:// in the copied image path since markdown should not have the protocol specified
+        .replace(/\?msec=\d+/, '') // We also want to remove the "msec" query parameter used for cache busting
+
+      image.setAttribute('src', cleanSrc)
+
+      // 同步生成 data URL：图片已在 DOM 中加载，canvas.drawImage 不需要等待
+      // 用 imageWrapper.id 找到真实 DOM 元素，避免虚拟 doc 里的 img 未加载
+      if (imageWrapper.id) {
+        const realWrapper = document.getElementById(imageWrapper.id)
+        if (realWrapper) {
+          const realImg = realWrapper.querySelector('img')
+          if (realImg && realImg.complete && realImg.naturalWidth > 0) {
+            try {
+              // 限制 2000px 宽，防止超大图片使 HTML 过大
+              const maxW = Math.min(realImg.naturalWidth, 2000)
+              const scale = maxW / realImg.naturalWidth
+              const cv = document.createElement('canvas')
+              cv.width = maxW
+              cv.height = Math.round(realImg.naturalHeight * scale)
+              cv.getContext('2d').drawImage(realImg, 0, 0, cv.width, cv.height)
+              imgDataUrlMap.set(cleanSrc, cv.toDataURL('image/jpeg', 0.85))
+            } catch (e) {
+              console.warn('[copy-mixed] 生成图片 data URL 失败:', e)
+            }
+          }
+        }
+      }
     }
 
     const hrs = wrapper.querySelectorAll('[data-role=hr]')
@@ -243,9 +268,21 @@ const copyCutCtrl = (ContentState) => {
 
     let htmlData = wrapper.innerHTML
     const textData = this.htmlToMarkdown(htmlData)
-    htmlData = marked(textData)
+    let htmlRendered = marked(textData)
 
-    return { html: htmlData, text: textData }
+    // 将渲染后 HTML 中的图片路径替换为 data URL，实现飞书/Word 风格的富文本粘贴
+    if (imgDataUrlMap.size > 0) {
+      const richDoc = new DOMParser().parseFromString(htmlRendered, 'text/html')
+      richDoc.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src')
+        if (src && imgDataUrlMap.has(src)) {
+          img.setAttribute('src', imgDataUrlMap.get(src))
+        }
+      })
+      htmlRendered = richDoc.body.innerHTML
+    }
+
+    return { html: htmlRendered, text: textData }
   }
 
   ContentState.prototype.docCopyHandler = function(event) {
@@ -375,7 +412,9 @@ const copyCutCtrl = (ContentState) => {
     switch (type) {
       case 'normal': {
         if (text.length > 0) {
-          event.clipboardData.setData('text/html', '')
+          // html 已内嵌图片 data URL，粘贴到飞书/Word 时图片可见
+          // 纯文字选区 html 也只有 p/strong/em 等基础标签，不影响纯文本场景
+          event.clipboardData.setData('text/html', html)
           event.clipboardData.setData('text/plain', text)
         }
         break
