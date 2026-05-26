@@ -192,8 +192,8 @@ const pasteCtrl = (ContentState) => {
   }
 
   ContentState.prototype.pasteImage = async function(event) {
-    // Try to guess the clipboard file path（callback 支持 async，await 保证中文路径正确解码）
-    const imagePath = await this.muya.options.clipboardFilePath()
+    // Try to guess the clipboard file path
+    const imagePath = this.muya.options.clipboardFilePath()
 
     if (imagePath && typeof imagePath === 'string' && IMAGE_EXT_REG.test(imagePath)) {
       const id = `loading-${getUniqueId()}`

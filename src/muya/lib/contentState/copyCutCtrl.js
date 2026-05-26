@@ -318,6 +318,7 @@ const copyCutCtrl = (ContentState) => {
           }
         }
       }
+      console.log('[copy-image] selectedImage:', selectedImage.absoluteImagePath, 'imageEl:', imageEl)
       if (
         imageEl &&
         imageEl.complete &&
@@ -334,13 +335,13 @@ const copyCutCtrl = (ContentState) => {
           ctx.drawImage(imageEl, 0, 0)
           const dataUrl = canvas.toDataURL('image/png')
           console.log('[copy-image] canvas 生成成功，宽:', imageEl.naturalWidth, '高:', imageEl.naturalHeight, '发送IPC...')
-          // 通过主进程写入剪贴板（渲染进程直接调用 clipboard.writeImage 已弃用）
+          // 通过主进程写入系统剪贴板
+          // 注意：不能调 event.clipboardData.setData()，否则 Chromium 内部剪贴板会
+          // 被清空，从而覆盖掉 IPC 的写入，导致粘贴时剪贴板为空
           window.electron.ipcRenderer.invoke('mt::write-image-to-clipboard', dataUrl)
             .then(ok => console.log('[copy-image] IPC 写剪贴板结果:', ok))
             .catch(e => console.error('[copy-image] IPC 失败:', e))
-          event.clipboardData.setData('text/plain', '')
-          event.clipboardData.setData('text/html', '')
-          return
+          return  // 不再调 setData，只靠 IPC
         } catch (e) {
           console.error('[copy-image] canvas 处理失败，降级为文本', e)
         }
