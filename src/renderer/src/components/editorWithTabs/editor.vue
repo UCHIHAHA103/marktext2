@@ -1254,11 +1254,9 @@ onMounted(() => {
     showLightboxForSrc(src)
   })
 
-  // 选中图片 Ctrl+C 复制
-  editor.value.on('copy-selected-image', ({ imageInfo }) => {
-    const src = imageInfo.absoluteImagePath || (imageInfo.token && imageInfo.token.attrs && imageInfo.token.attrs.src)
-    if (src) copyImageFromUrl(src)
-  })
+  // 注意：选中图片 Ctrl+C 复制由 copyCutCtrl.js 的 copy 事件 + IPC 处理
+  // 此处不再重复处理 copy-selected-image，否则 copyImageFromUrl 的 fallback
+  // 会用 writeText(url) 覆盖掉 IPC 写入的真实图片位图
 
   editor.value.on('selectionChange', (changes) => {
     const { y } = changes.cursorCoords
