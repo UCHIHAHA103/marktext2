@@ -815,10 +815,23 @@ class App {
     // 从本地文件路径写图片到剪贴板（适合大图，避免 IPC 传输巨大 dataUrl）
     ipcMain.handle('mt::write-image-file-to-clipboard', async (event, filePath) => {
       try {
-        const ni = nativeImage.createFromPath(filePath)
+        // 用 fs.readFileSync 读取原始字节，比 createFromPath 更可靠地处理 Windows 中文路径
+        // createFromPath 在 Windows 上可能使用 ANSI API 导致中文路径无法读取
+        const rawBuf = require('fs').readFileSync(filePath)
+        let ni = nativeImage.createFromBuffer(rawBuf)
         if (ni.isEmpty()) {
-          console.error('[clipboard] nativeImage.createFromPath 返回空图片:', filePath)
+          console.error('[clipboard] createFromBuffer 返回空图片:', filePath)
           return false
+        }
+        const { width, height } = ni.getSize()
+        console.log('[clipboard] 图片尺寸:', width, 'x', height, filePath)
+        // 超大图片（如 13234×5499）展开为 ~291MB 位图，Windows 剪贴板可能静默拒绝
+        // 限制到 4096px 内，缩放后仍保持高清效果
+        if (width > 4096 || height > 4096) {
+          const ratio = Math.min(4096 / width, 4096 / height)
+          ni = ni.resize({ width: Math.round(width * ratio) })
+          const ns = ni.getSize()
+          console.log('[clipboard] 超大图片缩放至:', ns.width, 'x', ns.height)
         }
         clipboard.writeImage(ni)
         console.log('[clipboard] 文件路径写剪贴板成功:', filePath)
