@@ -1246,6 +1246,7 @@ onMounted(() => {
   // 图片灯箱：由 clickEvent 或 keyboard（Space键）触发
   editor.value.on('muya-image-lightbox', ({ imageInfo }) => {
     const src = imageInfo.absoluteImagePath || (imageInfo.token && imageInfo.token.attrs && imageInfo.token.attrs.src)
+    console.log('[lightbox] muya-image-lightbox 收到，src:', src, 'imageInfo:', imageInfo)
     showLightboxForSrc(src)
   })
 

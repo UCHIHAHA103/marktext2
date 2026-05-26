@@ -1,4 +1,4 @@
-import { contextBridge, shell, clipboard, webUtils } from 'electron'
+import { contextBridge, shell, clipboard, webUtils, nativeImage } from 'electron'
 import fs from 'fs-extra'
 import { isFile, isDirectory, ensureDirSync } from 'common/filesystem'
 import { electronAPI } from '@electron-toolkit/preload'
@@ -21,7 +21,8 @@ const i18nUtils = {
 const customElectronAPI = {
   shell,
   clipboard,
-  webUtils
+  webUtils,
+  nativeImage
 }
 
 const fileUtilsAPI = {

@@ -70,6 +70,8 @@ class ClickEvent {
       const { target } = event
       // handler table click
       const toolItem = getToolItem(target)
+      // 在清除选中状态前先保存，用于判断第二次点击是否触发灯箱
+      const prevSelectedImage = contentState.selectedImage
       contentState.selectedImage = null
       contentState.selectedTableCells = null
       if (toolItem) {
@@ -158,13 +160,12 @@ class ClickEvent {
         event.preventDefault()
 
         // 第二次点击已选中的图片 → 打开灯箱预览
-        if (
-          contentState.selectedImage &&
-          contentState.selectedImage.imageId === imageInfo.imageId
-        ) {
+        if (prevSelectedImage && prevSelectedImage.imageId === imageInfo.imageId) {
+          console.log('[lightbox] 触发灯箱，imageId:', imageInfo.imageId)
           eventCenter.dispatch('muya-image-lightbox', { imageInfo })
           return
         }
+        console.log('[lightbox] 首次选中图片，imageId:', imageInfo.imageId)
 
         // 第一次点击：选中图片（鼠标变放大镜由 CSS 控制）
         eventCenter.dispatch('select-image', imageInfo)

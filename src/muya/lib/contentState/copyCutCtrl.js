@@ -304,6 +304,35 @@ const copyCutCtrl = (ContentState) => {
     event.preventDefault()
     const { selectedImage } = this
     if (selectedImage) {
+      // 优先将真实图片位图写入剪贴板，而非 Markdown 语法文本
+      const imageEl = selectedImage.imageId
+        ? document.querySelector(`#${selectedImage.imageId} img`)
+        : null
+      if (
+        imageEl &&
+        imageEl.complete &&
+        imageEl.naturalWidth > 0 &&
+        typeof window !== 'undefined' &&
+        window.electron &&
+        window.electron.nativeImage
+      ) {
+        try {
+          const canvas = document.createElement('canvas')
+          canvas.width = imageEl.naturalWidth
+          canvas.height = imageEl.naturalHeight
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(imageEl, 0, 0)
+          const dataUrl = canvas.toDataURL('image/png')
+          const nativeImg = window.electron.nativeImage.createFromDataURL(dataUrl)
+          window.electron.clipboard.writeImage(nativeImg)
+          event.clipboardData.setData('text/plain', '')
+          event.clipboardData.setData('text/html', '')
+          return
+        } catch (e) {
+          console.error('写入图片到剪贴板失败，降级为文本', e)
+        }
+      }
+      // 降级：写入 Markdown 语法
       const { token } = selectedImage
       if (token.raw.length > 0) {
         event.clipboardData.setData('text/html', token.raw)
