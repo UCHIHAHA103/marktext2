@@ -118,6 +118,8 @@ let dragStartX = 0
 let dragStartY = 0
 let dragStartTX = 0
 let dragStartTY = 0
+// 切换上一张/下一张时禁用过渡动画，防止出现放大动效
+const isNavigating = ref(false)
 
 const currentSrc = computed(() => {
   if (props.images.length === 0) return props.initialSrc
@@ -127,7 +129,7 @@ const currentSrc = computed(() => {
 const imgStyle = computed(() => ({
   transform: `translate(${translateX.value}px, ${translateY.value}px) rotate(${rotation.value}deg) scale(${scale.value})`,
   cursor: scale.value > 1 ? 'grab' : 'default',
-  transition: isDragging ? 'none' : 'transform 0.2s ease'
+  transition: (isDragging || isNavigating.value) ? 'none' : 'transform 0.2s ease'
 }))
 
 // 当图片或列表变化时，重置到初始状态
@@ -199,12 +201,16 @@ function rotateRight() {
 
 function prev() {
   if (props.images.length <= 1) return
+  isNavigating.value = true
   currentIndex.value = (currentIndex.value - 1 + props.images.length) % props.images.length
+  nextTick(() => { isNavigating.value = false })
 }
 
 function next() {
   if (props.images.length <= 1) return
+  isNavigating.value = true
   currentIndex.value = (currentIndex.value + 1) % props.images.length
+  nextTick(() => { isNavigating.value = false })
 }
 
 function close() {
@@ -340,7 +346,8 @@ onBeforeUnmount(() => {
 .image-lightbox-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  /* 必须高于编辑器浮动工具栏（ag-front-icon z-index:99999）*/
+  z-index: 100001;
   background: rgba(0, 0, 0, 0.88);
   display: flex;
   align-items: center;
@@ -502,9 +509,13 @@ onBeforeUnmount(() => {
 }
 .tb-btn.tb-text {
   width: auto;
+  height: 32px;
+  min-height: 32px;
+  line-height: 32px;
   padding: 0 8px;
   font-size: 12px;
   font-weight: 500;
+  box-sizing: border-box;
 }
 
 .tb-percent {

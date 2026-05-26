@@ -660,6 +660,10 @@ const showLightboxForSrc = (src) => {
   lightboxImages.value = images.length > 0 ? images : [{ src }]
   lightboxInitialSrc.value = src
   lightboxVisible.value = true
+  // 清除图片选中状态，防止编辑浮动工具栏穿透灯箱遮罩
+  if (editor.value && editor.value.contentState) {
+    editor.value.contentState.selectedImage = null
+  }
 }
 
 const copyImageFromUrl = async (src) => {
