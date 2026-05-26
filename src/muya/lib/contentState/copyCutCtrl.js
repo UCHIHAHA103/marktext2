@@ -146,20 +146,20 @@ const copyCutCtrl = (ContentState) => {
 
       // 同步生成 data URL：图片已在 DOM 中加载，canvas.drawImage 不需要等待
       // 用 imageWrapper.id 找到真实 DOM 元素，避免虚拟 doc 里的 img 未加载
+      // 以 image（DOM 元素）为 key，避免路径字符串匹配问题
       if (imageWrapper.id) {
         const realWrapper = document.getElementById(imageWrapper.id)
         if (realWrapper) {
           const realImg = realWrapper.querySelector('img')
           if (realImg && realImg.complete && realImg.naturalWidth > 0) {
             try {
-              // 限制 2000px 宽，防止超大图片使 HTML 过大
               const maxW = Math.min(realImg.naturalWidth, 2000)
               const scale = maxW / realImg.naturalWidth
               const cv = document.createElement('canvas')
               cv.width = maxW
               cv.height = Math.round(realImg.naturalHeight * scale)
               cv.getContext('2d').drawImage(realImg, 0, 0, cv.width, cv.height)
-              imgDataUrlMap.set(cleanSrc, cv.toDataURL('image/jpeg', 0.85))
+              imgDataUrlMap.set(image, cv.toDataURL('image/jpeg', 0.85))
             } catch (e) {
               console.warn('[copy-mixed] 生成图片 data URL 失败:', e)
             }
@@ -268,21 +268,23 @@ const copyCutCtrl = (ContentState) => {
 
     let htmlData = wrapper.innerHTML
     const textData = this.htmlToMarkdown(htmlData)
-    let htmlRendered = marked(textData)
-
-    // 将渲染后 HTML 中的图片路径替换为 data URL，实现飞书/Word 风格的富文本粘贴
+    // htmlToMarkdown 读的是 data-raw，不依赖 img.src，所以可以在此之后修改 img.src
+    // 把 data URL 写回 wrapper 里的 img 元素，直接用 wrapper.innerHTML 作为富文本
     if (imgDataUrlMap.size > 0) {
-      const richDoc = new DOMParser().parseFromString(htmlRendered, 'text/html')
-      richDoc.querySelectorAll('img').forEach(img => {
-        const src = img.getAttribute('src')
-        if (src && imgDataUrlMap.has(src)) {
-          img.setAttribute('src', imgDataUrlMap.get(src))
-        }
-      })
-      htmlRendered = richDoc.body.innerHTML
+      for (const [imgEl, dataUrl] of imgDataUrlMap.entries()) {
+        imgEl.setAttribute('src', dataUrl)
+      }
     }
+    let richHtml = wrapper.innerHTML
+    // 去掉 HTML 注释的三种形态，飞书等富文本编辑器会把注释显示为文本：
+    // 1. 真实 HTML 注释节点
+    richHtml = richHtml.replace(/<!--[\s\S]*?-->/g, '')
+    // 2. Muya 把 HTML block 存成 pre + textContent，序列化后是转义形式
+    richHtml = richHtml.replace(/<pre[^>]*>&lt;!--[\s\S]*?--&gt;<\/pre>/gi, '')
+    // 3. p 包裹的转义注释
+    richHtml = richHtml.replace(/<p[^>]*>&lt;!--[\s\S]*?--&gt;<\/p>/gi, '')
 
-    return { html: htmlRendered, text: textData }
+    return { html: richHtml, text: textData }
   }
 
   ContentState.prototype.docCopyHandler = function(event) {
