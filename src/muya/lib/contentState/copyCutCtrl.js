@@ -305,9 +305,19 @@ const copyCutCtrl = (ContentState) => {
     const { selectedImage } = this
     if (selectedImage) {
       // 优先将真实图片位图写入剪贴板，而非 Markdown 语法文本
-      const imageEl = selectedImage.imageId
-        ? document.querySelector(`#${selectedImage.imageId} img`)
-        : null
+      // 注意：imageId 在 singleRender 后会变化，改用 absoluteImagePath 或 src 匹配
+      const absPath = selectedImage.absoluteImagePath
+      let imageEl = null
+      if (absPath) {
+        // 在所有已渲染的图片中找到 src 匹配的那一张
+        const allImgs = document.querySelectorAll('.ag-inline-image img')
+        for (const img of allImgs) {
+          if (img.currentSrc === absPath || img.src === absPath) {
+            imageEl = img
+            break
+          }
+        }
+      }
       if (
         imageEl &&
         imageEl.complete &&

@@ -124,7 +124,8 @@ class Keyboard {
           return contentState.docEnterHandler(event)
         case EVENT_KEYS.Space: {
           if (contentState.selectedImage) {
-            // Space：打开灯箱预览
+            // Space：打开灯箱预览，阻止默认滚动行为
+            event.preventDefault()
             eventCenter.dispatch('muya-image-lightbox', { imageInfo: contentState.selectedImage })
           }
           break

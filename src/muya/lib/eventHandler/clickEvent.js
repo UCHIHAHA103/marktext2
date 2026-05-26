@@ -160,12 +160,20 @@ class ClickEvent {
         event.preventDefault()
 
         // 第二次点击已选中的图片 → 打开灯箱预览
-        if (prevSelectedImage && prevSelectedImage.imageId === imageInfo.imageId) {
-          console.log('[lightbox] 触发灯箱，imageId:', imageInfo.imageId)
+        // 注意：selectImage 触发 singleRender 后 imageId 会变（含 blockKey 前缀），
+        // 因此用更稳定的 key + token.range.start 判断是否为同一张图片
+        const isSameImage =
+          prevSelectedImage &&
+          prevSelectedImage.key === imageInfo.key &&
+          prevSelectedImage.token &&
+          imageInfo.token &&
+          prevSelectedImage.token.range.start === imageInfo.token.range.start
+        if (isSameImage) {
+          console.log('[lightbox] 触发灯箱，key:', imageInfo.key, 'rangeStart:', imageInfo.token.range.start)
           eventCenter.dispatch('muya-image-lightbox', { imageInfo })
           return
         }
-        console.log('[lightbox] 首次选中图片，imageId:', imageInfo.imageId)
+        console.log('[lightbox] 首次选中图片，key:', imageInfo.key, 'imageId:', imageInfo.imageId)
 
         // 第一次点击：选中图片（鼠标变放大镜由 CSS 控制）
         eventCenter.dispatch('select-image', imageInfo)
