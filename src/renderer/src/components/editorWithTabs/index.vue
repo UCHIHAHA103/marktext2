@@ -1,7 +1,6 @@
 <template>
   <div
     class="editor-with-tabs"
-    :style="{ 'max-width': showSideBar ? `calc(100vw - ${sideBarWidth}px` : '100vw' }"
   >
     <tabs v-show="showTabBar" />
     <div class="container">

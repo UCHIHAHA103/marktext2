@@ -1,43 +1,46 @@
 <template>
-  <div class="editor-container">
-    <side-bar v-if="init" />
+  <!-- 标题栏提到全宽顶部，避免与侧边栏图标条同高重叠 -->
+  <div class="app-root">
+    <title-bar
+      :project="projectTree"
+      :pathname="pathname"
+      :filename="filename"
+      :active="windowActive"
+      :word-count="wordCount"
+      :selected-word-count="selectedWordCount"
+      :platform="platform"
+      :is-saved="isSaved"
+      :is-read-only="isReadOnly"
+      @toggle-read-only="toggleReadOnly"
+    />
 
-    <div class="editor-middle">
-      <title-bar
-        :project="projectTree"
-        :pathname="pathname"
-        :filename="filename"
-        :active="windowActive"
-        :word-count="wordCount"
-        :selected-word-count="selectedWordCount"
-        :platform="platform"
-        :is-saved="isSaved"
-        :is-read-only="isReadOnly"
-        @toggle-read-only="toggleReadOnly"
-      />
+    <div class="editor-container">
+      <side-bar v-if="init" />
 
-      <div
-        v-if="!init"
-        class="editor-placeholder"
-      />
-      <recent v-if="!hasCurrentFile && init" />
-      <editor-with-tabs
-        v-if="hasCurrentFile && init"
-        :markdown="markdown"
-        :cursor="cursor"
-        :muya-index-cursor="muyaIndexCursor"
-        :source-code="sourceCode"
-        :show-tab-bar="showTabBar"
-        :text-direction="textDirection"
-        :platform="platform"
-      />
-      <command-palette />
-      <about-dialog />
-      <export-setting-dialog />
-      <rename />
-      <tweet />
-      <import-modal />
-      <save-confirm-dialog />
+      <div class="editor-middle">
+        <div
+          v-if="!init"
+          class="editor-placeholder"
+        />
+        <recent v-if="!hasCurrentFile && init" />
+        <editor-with-tabs
+          v-if="hasCurrentFile && init"
+          :markdown="markdown"
+          :cursor="cursor"
+          :muya-index-cursor="muyaIndexCursor"
+          :source-code="sourceCode"
+          :show-tab-bar="showTabBar"
+          :text-direction="textDirection"
+          :platform="platform"
+        />
+        <command-palette />
+        <about-dialog />
+        <export-setting-dialog />
+        <rename />
+        <tweet />
+        <import-modal />
+        <save-confirm-dialog />
+      </div>
     </div>
   </div>
 </template>
@@ -214,18 +217,24 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.editor-placeholder,
+/* 根容器：flex 列，占满整个视口 */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 标题栏下方的内容区：flex 行 */
 .editor-container {
   display: flex;
   flex-direction: row;
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: 1;
+  min-height: 0;
+  position: relative;
 }
+
 .editor-container .hide {
   z-index: -1;
   opacity: 0;
@@ -234,12 +243,13 @@ onMounted(async () => {
 }
 .editor-placeholder {
   background: var(--editorBgColor);
+  flex: 1;
 }
 .editor-middle {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 100vh;
+  min-height: 0;
   position: relative;
   & > .editor {
     flex: 1;

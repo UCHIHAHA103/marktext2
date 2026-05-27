@@ -15,52 +15,52 @@ const COMMAND_KEY = isOsx ? '⌘' : 'Ctrl'
 const icons = [
   {
     type: 'strong',
-    tooltip: 'Bold',
+    tooltip: '加粗',
     shortcut: `${COMMAND_KEY}+B`,
     icon: strongIcon
   }, {
     type: 'em',
-    tooltip: 'Italic',
+    tooltip: '斜体',
     shortcut: `${COMMAND_KEY}+I`,
     icon: emphasisIcon
   }, {
     type: 'u',
-    tooltip: 'Underline',
+    tooltip: '下划线',
     shortcut: `${COMMAND_KEY}+U`,
     icon: underlineIcon
   }, {
     type: 'del',
-    tooltip: 'Strikethrough',
+    tooltip: '删除线',
     shortcut: `${COMMAND_KEY}+D`,
     icon: strikeIcon
   }, {
     type: 'mark',
-    tooltip: 'Highlight',
+    tooltip: '高亮',
     shortcut: `⇧+${COMMAND_KEY}+H`,
     icon: highlightIcon
   }, {
     type: 'inline_code',
-    tooltip: 'Inline Code',
+    tooltip: '行内代码',
     shortcut: `${COMMAND_KEY}+\``,
     icon: codeIcon
   }, {
     type: 'inline_math',
-    tooltip: 'Inline Math',
+    tooltip: '行内公式',
     shortcut: `⇧+${COMMAND_KEY}+M`,
     icon: mathIcon
   }, {
     type: 'link',
-    tooltip: 'Link',
+    tooltip: '链接',
     shortcut: `${COMMAND_KEY}+L`,
     icon: linkIcon
   }, {
     type: 'image',
-    tooltip: 'Image',
+    tooltip: '插入图片',
     shortcut: `⇧+${COMMAND_KEY}+I`,
     icon: imageIcon
   }, {
     type: 'clear',
-    tooltip: 'Clear Formatting',
+    tooltip: '清除格式',
     shortcut: `⇧+${COMMAND_KEY}+R`,
     icon: clearIcon
   }

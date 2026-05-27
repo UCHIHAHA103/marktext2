@@ -3,8 +3,8 @@
     v-show="showSideBar"
     ref="sideBar"
     class="side-bar"
-    :style="[!rightColumn ? { 'min-width': '45px' } : {}, { width: `${finalSideBarWidth}px` }]"
   >
+    <!-- 图标条：始终可见，45px 宽 -->
     <div class="left-column">
       <ul>
         <li
@@ -26,9 +26,12 @@
         </li>
       </ul>
     </div>
+
+    <!-- 浮动面板：叠加在编辑区上方 -->
     <div
-      v-show="rightColumn"
       class="right-column"
+      :class="{ open: !!rightColumn }"
+      :style="rightColumn ? { width: `${sideBarViewWidth}px` } : {}"
     >
       <tree
         v-if="rightColumn === 'files'"
@@ -38,11 +41,19 @@
       />
       <side-bar-search v-else-if="rightColumn === 'search'" />
       <toc v-else-if="rightColumn === 'toc'" />
+      <!-- 拖拽改宽（在面板内右边缘）-->
+      <div
+        v-show="rightColumn"
+        ref="dragBar"
+        class="drag-bar"
+      />
     </div>
+
+    <!-- 点击编辑区关闭面板（搜索时不关）-->
     <div
-      v-show="rightColumn"
-      ref="dragBar"
-      class="drag-bar"
+      v-if="rightColumn && rightColumn !== 'search'"
+      class="panel-overlay"
+      @click="closePanelByOverlay"
     />
   </div>
 </template>
@@ -74,10 +85,9 @@ const { rightColumn, showSideBar, sideBarWidth } = storeToRefs(layoutStore)
 const { projectTree } = storeToRefs(projectStore)
 const { tabs } = storeToRefs(editorStore)
 
+// 浮动模式下侧边栏本体始终只占图标条宽度
 const finalSideBarWidth = computed(() => {
-  if (!showSideBar.value) return 0
-  if (rightColumn.value === '') return 45
-  return sideBarViewWidth.value < 220 ? 220 : sideBarViewWidth.value
+  return showSideBar.value ? 45 : 0
 })
 
 onMounted(() => {
@@ -115,15 +125,14 @@ onMounted(() => {
 const handleLeftIconClick = (name) => {
   if (rightColumn.value === name) {
     layoutStore.SET_LAYOUT({ rightColumn: '' })
-    layoutStore.CHANGE_SIDE_BAR_WIDTH(finalSideBarWidth.value)
   } else {
-    const needDispatch = rightColumn.value === ''
     layoutStore.SET_LAYOUT({ rightColumn: name })
-    sideBarViewWidth.value = +sideBarWidth.value
-    if (needDispatch) {
-      layoutStore.CHANGE_SIDE_BAR_WIDTH(finalSideBarWidth.value)
-    }
+    sideBarViewWidth.value = +sideBarWidth.value || 280
   }
+}
+
+const closePanelByOverlay = () => {
+  layoutStore.SET_LAYOUT({ rightColumn: '' })
 }
 
 const handleLeftBottomClick = (name) => {
@@ -134,31 +143,33 @@ const handleLeftBottomClick = (name) => {
 </script>
 
 <style scoped>
+/* 侧边栏外壳：仅占图标条宽度，面板浮动叠加 */
 .side-bar {
   display: flex;
   flex-shrink: 0;
   flex-grow: 0;
-  width: 280px;
-  height: 100vh;
-  min-width: 220px;
+  width: 45px;
+  height: 100%;
   position: relative;
   color: var(--sideBarColor);
   user-select: none;
   background: var(--sideBarBgColor);
   border-right: 1px solid var(--itemBgColor);
+  z-index: 50;
 }
 
 .side-bar .left-column svg {
   fill: var(--iconColor);
 }
 
+/* 图标条：标题栏移到顶层后无需大 padding-top，8px 留点上边距即可 */
 .left-column {
   height: 100%;
   width: 45px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding-top: 40px;
+  padding-top: 8px;
   box-sizing: border-box;
 }
 
@@ -201,23 +212,52 @@ const handleLeftBottomClick = (name) => {
   opacity: 1;
 }
 
+/* 浮动面板：绝对定位，从图标条右侧展开 */
 .right-column {
-  flex: 1;
-  width: calc(100% - 50px);
+  position: absolute;
+  left: 45px;
+  top: 0;
+  bottom: 0;
+  width: 0;
   overflow: hidden;
+  background: var(--sideBarBgColor);
+  border-right: 1px solid var(--itemBgColor);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
 }
 
+.right-column.open {
+  /* width 由 style 绑定动态设置 */
+  min-width: 220px;
+}
+
+/* 拖拽条（在浮动面板右边缘）*/
 .drag-bar {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  height: 100%;
-  width: 3px;
+  width: 4px;
   cursor: col-resize;
+  z-index: 101;
 }
 
 .drag-bar:hover {
-  border-right: 2px solid var(--iconColor);
+  background: var(--iconColor);
+  opacity: 0.4;
+}
+
+/* 点击编辑区关闭浮动面板的透明遮罩 */
+.panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  cursor: default;
 }
 </style>
