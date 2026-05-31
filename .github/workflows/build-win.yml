@@ -31,6 +31,14 @@ jobs:
           path: ${{ env.LOCALAPPDATA }}\electron\Cache
           key: ${{ runner.os }}-electron41-cache-v1-${{ hashFiles('package-lock.json') }}
 
+      - name: Cache electron-builder downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.LOCALAPPDATA }}\electron-builder\Cache
+          key: ${{ runner.os }}-electron-builder-cache-v1-${{ hashFiles('electron-builder.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-builder-cache-v1-
+
       - name: Install dependencies
         run: npm ci --no-audit --no-fund --ignore-scripts --loglevel error
 
