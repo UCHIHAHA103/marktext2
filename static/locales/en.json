@@ -283,7 +283,9 @@
       "files": "Files",
       "search": "Search",
       "toc": "Table of Contents",
-      "settings": "Settings"
+      "settings": "Settings",
+      "pin": "Pin sidebar (fixed)",
+      "unpin": "Unpin sidebar (floating)"
     }
   },
   "commandPalette": {

@@ -21,13 +21,16 @@ const createBufferedLayoutState = (state) => {
 
 const width = localStorage.getItem('side-bar-width')
 const sideBarWidth = normalizeSideBarWidth(width)
+const sideBarPinned = localStorage.getItem('side-bar-pinned') === 'true'
 
 export const useLayoutStore = defineStore('layout', {
   state: () => ({
     rightColumn: 'files',
     showSideBar: false,
     showTabBar: false,
-    sideBarWidth
+    sideBarWidth,
+    // 侧边栏模式：false=悬浮（叠加在编辑区上），true=固定（占据布局宽度）
+    sideBarPinned
   }),
   actions: {
     SET_LAYOUT(layout, { scheduleBufferUpdate = true } = {}) {
@@ -128,6 +131,17 @@ export const useLayoutStore = defineStore('layout', {
 
     CHANGE_SIDE_BAR_WIDTH(width) {
       this.SET_SIDE_BAR_WIDTH(width)
+    },
+
+    // 切换侧边栏固定/悬浮模式，并持久化
+    TOGGLE_SIDE_BAR_PINNED(value) {
+      const next = value === undefined ? !this.sideBarPinned : !!value
+      this.sideBarPinned = next
+      localStorage.setItem('side-bar-pinned', next ? 'true' : 'false')
+      // 固定模式默认展开目录面板，避免空白
+      if (next && !this.rightColumn) {
+        this.rightColumn = 'toc'
+      }
     }
   }
 })

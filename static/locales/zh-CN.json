@@ -284,7 +284,9 @@
       "files": "文件",
       "search": "搜索",
       "toc": "目录",
-      "settings": "设置"
+      "settings": "设置",
+      "pin": "固定侧边栏",
+      "unpin": "切换为悬浮侧边栏"
     }
   },
   "commandPalette": {

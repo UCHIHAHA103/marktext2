@@ -284,7 +284,9 @@
       "files": "檔案",
       "search": "搜尋",
       "toc": "目錄",
-      "settings": "設定"
+      "settings": "設定",
+      "pin": "固定側邊欄",
+      "unpin": "切換為懸浮側邊欄"
     }
   },
   "commandPalette": {

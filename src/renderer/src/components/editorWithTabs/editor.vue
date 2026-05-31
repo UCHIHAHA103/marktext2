@@ -240,7 +240,6 @@ const rowInput = ref(null)
 let printer = null
 let spellchecker = null
 let switchLanguageCommand = null
-const imageViewer = null
 
 // Watchers
 watch(typewriter, (value) => {
@@ -672,32 +671,6 @@ const showLightboxForSrc = (src) => {
   }
 }
 
-const copyImageFromUrl = async (src) => {
-  try {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    await new Promise((resolve, reject) => {
-      img.onload = resolve
-      img.onerror = reject
-      img.src = src
-    })
-    const canvas = document.createElement('canvas')
-    canvas.width = img.naturalWidth
-    canvas.height = img.naturalHeight
-    const ctx = canvas.getContext('2d')
-    ctx.drawImage(img, 0, 0)
-    canvas.toBlob(async (blob) => {
-      try {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-      } catch {
-        navigator.clipboard.writeText(src).catch(() => {})
-      }
-    }, 'image/png')
-  } catch (e) {
-    console.error('复制图片失败', e)
-  }
-}
-
 const switchSpellcheckLanguage = (languageCode) => {
   const { isEnabled } = spellchecker
 
@@ -846,7 +819,60 @@ const scrollToHighlight = () => {
 }
 
 const scrollToHeader = (slug) => {
-  return scrollToElement(`#${slug}`)
+  scrollToElement(`#${slug}`)
+  flashHeading(slug)
+}
+
+// 点击目录跳转后，让目标标题闪现高亮再淡出，帮助用户聚焦
+const flashHeading = (slug) => {
+  const anchor = document.getElementById(slug)
+  if (!anchor) return
+  anchor.classList.remove('mt-heading-flash')
+  // 强制重排，确保连续点击同一标题也能重放动画
+  anchor.scrollTop // eslint-disable-line no-unused-expressions
+  anchor.classList.add('mt-heading-flash')
+  clearTimeout(anchor._mtFlashTimer)
+  anchor._mtFlashTimer = setTimeout(() => {
+    anchor.classList.remove('mt-heading-flash')
+  }, 1800)
+}
+
+// 滚动联动高亮（Scroll Spy）：算出当前阅读位置对应的标题，广播给目录
+let activeHeadingSlug = null
+let spyTicking = false
+const computeActiveHeading = () => {
+  const list = editorStore.listToc
+  if (!list || list.length === 0) return
+  const { container } = editor.value
+  if (!container) return
+  // 阈值线设在容器顶部下方 100px，标题滚过此线即视为当前阅读位置
+  const threshold = container.getBoundingClientRect().top + 100
+  let current = list[0].slug
+  for (const item of list) {
+    const el = document.getElementById(item.slug)
+    if (!el) continue
+    if (el.getBoundingClientRect().top <= threshold) {
+      current = item.slug
+    } else {
+      break
+    }
+  }
+  // 滚到底部时强制高亮最后一个标题
+  if (container.scrollTop + container.clientHeight >= container.scrollHeight - 4) {
+    current = list[list.length - 1].slug
+  }
+  if (current !== activeHeadingSlug) {
+    activeHeadingSlug = current
+    bus.emit('toc-active-heading', current)
+  }
+}
+const updateActiveHeading = () => {
+  if (spyTicking) return
+  spyTicking = true
+  requestAnimationFrame(() => {
+    computeActiveHeading()
+    spyTicking = false
+  })
 }
 
 const scrollToElement = (selector) => {
@@ -1242,6 +1268,7 @@ onMounted(() => {
 
   editor.value.on('scroll', (scrollEvent) => {
     editorStore.updateScrollPosition(currentFile.value.id, scrollEvent.scrollTop)
+    updateActiveHeading()
   })
 
   editor.value.on('heading-copy-link', ({ key }) => {
@@ -1352,6 +1379,36 @@ onBeforeUnmount(() => {
 
 <style>
 /* ... existing style ... */
+
+/* 点击目录跳转后，目标标题闪现高亮再淡出（主题色低亮度版） */
+.editor-component h1.mt-heading-flash,
+.editor-component h2.mt-heading-flash,
+.editor-component h3.mt-heading-flash,
+.editor-component h4.mt-heading-flash,
+.editor-component h5.mt-heading-flash,
+.editor-component h6.mt-heading-flash {
+  border-radius: 4px;
+  animation: mtHeadingFlash 1.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes mtHeadingFlash {
+  0% {
+    background: transparent;
+    box-shadow: -8px 0 0 transparent, 8px 0 0 transparent;
+  }
+  10% {
+    background: var(--themeColor10);
+    box-shadow: -8px 0 0 var(--themeColor10), 8px 0 0 var(--themeColor10);
+  }
+  55% {
+    background: var(--themeColor10);
+    box-shadow: -8px 0 0 var(--themeColor10), 8px 0 0 var(--themeColor10);
+  }
+  100% {
+    background: transparent;
+    box-shadow: -8px 0 0 transparent, 8px 0 0 transparent;
+  }
+}
+
 .editor-wrapper {
   height: 100%;
   position: relative;
