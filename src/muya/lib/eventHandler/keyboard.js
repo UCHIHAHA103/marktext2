@@ -1,7 +1,7 @@
 import { EVENT_KEYS, KEYS_TO_IGNORE } from '../config'
 import selection from '../selection'
 import { findNearestParagraph } from '../selection/dom'
-import { getParagraphReference, getImageInfo } from '../utils'
+import { getParagraphReference } from '../utils'
 import { checkEditEmoji } from '../ui/emojis'
 
 class Keyboard {
@@ -127,16 +127,6 @@ class Keyboard {
             // Space：打开灯箱预览，阻止默认滚动行为
             event.preventDefault()
             eventCenter.dispatch('muya-image-lightbox', { imageInfo: contentState.selectedImage })
-          }
-          break
-        }
-        case EVENT_KEYS.KeyC: {
-          // Ctrl/Cmd+C：复制选中图片
-          if ((event.ctrlKey || event.metaKey) && contentState.selectedImage) {
-            event.preventDefault()
-            event.stopPropagation()
-            eventCenter.dispatch('copy-selected-image', { imageInfo: contentState.selectedImage })
-            return
           }
           break
         }
