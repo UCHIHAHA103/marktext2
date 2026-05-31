@@ -412,20 +412,21 @@ onMounted(() => {
 }
 .empty,
 .search-result {
-  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   &::-webkit-scrollbar:vertical {
     width: 8px;
   }
 }
+/* search-result 有结果时撑开滚动；empty 不撑高，紧贴内容 */
+.search-result {
+  flex: 1;
+}
 .empty {
   font-size: 14px;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding-bottom: 100px;
+  padding: 8px 16px 4px;
+  color: var(--editorColor50, rgba(127, 127, 127, 0.6));
   & .no-data {
     display: flex;
     align-items: center;
@@ -433,7 +434,7 @@ onMounted(() => {
   }
   & .no-data .button-primary {
     display: block;
-    margin-top: 20px;
+    margin-top: 8px;
   }
 }
 </style>

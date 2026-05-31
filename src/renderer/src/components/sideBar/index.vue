@@ -33,7 +33,7 @@
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.6"
             stroke-linecap="round"
             stroke-linejoin="round"
           >
@@ -87,7 +87,7 @@
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.6"
             stroke-linecap="round"
             stroke-linejoin="round"
           >
@@ -308,9 +308,10 @@ const togglePinned = () => {
 
 .pill-divider {
   width: 1px;
-  height: 16px;
-  background: var(--itemBgColor);
-  margin: 0 3px;
+  height: 18px;
+  background: rgba(127, 127, 127, 0.3);
+  margin: 0 4px;
+  flex-shrink: 0;
 }
 
 /* 浮层：飞书风格毛玻璃，浮在编辑区上。宽度锁死 280，三种模式高度处理不同 */

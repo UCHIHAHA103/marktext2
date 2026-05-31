@@ -26,7 +26,7 @@ const sideBarPinned = localStorage.getItem('side-bar-pinned') === 'true'
 export const useLayoutStore = defineStore('layout', {
   state: () => ({
     rightColumn: '',
-    showSideBar: false,
+    showSideBar: true,
     showTabBar: false,
     sideBarWidth,
     // 侧边栏模式：false=悬浮（叠加在编辑区上），true=固定（占据布局宽度）

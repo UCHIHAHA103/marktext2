@@ -863,9 +863,9 @@ const computeActiveHeading = () => {
   if (!list || list.length === 0) return
   const { container } = editor.value
   if (!container) return
-  // 阈值线必须 >= STANDAR_Y(320, muya 滚动锚点) + 小容差，
-  // 否则点击跳转后目标标题刚好停在 320px 位置, top<=阈值不成立 → 高亮被锁到上一个标题
-  const threshold = container.getBoundingClientRect().top + STANDAR_Y + 20
+  // 阈值线 = STANDAR_Y - 10：muya 滚动后目标标题刚好在此线略下方位置
+  // 太大→多算一个下一个标题；太小→算到上一个。STANDAR_Y(320)-10=310 经验最佳
+  const threshold = container.getBoundingClientRect().top + STANDAR_Y - 10
   let current = list[0].slug
   let matchedTop = null
   for (const item of list) {
@@ -1011,6 +1011,11 @@ const handlePrintServiceClearup = () => {
 }
 
 const handleEditParagraph = (type) => {
+  // 预览模式（只读）下禁止任何编辑/插入操作
+  if (isReadOnly.value) {
+    console.log('[DEBUG-readonly] paragraph 操作被预览模式拦截:', type)
+    return
+  }
   if (type === 'table') {
     tableChecker.rows = 4
     tableChecker.columns = 3
@@ -1025,6 +1030,10 @@ const handleEditParagraph = (type) => {
 
 // handle `duplicate`, `delete`, `create paragraph below`
 const handleParagraph = (type) => {
+  if (isReadOnly.value) {
+    console.log('[DEBUG-readonly] paragraph(create/delete/dup) 被预览模式拦截:', type)
+    return
+  }
   if (editor.value) {
     switch (type) {
       case 'duplicate': {
@@ -1043,6 +1052,11 @@ const handleParagraph = (type) => {
 }
 
 const handleInlineFormat = (type) => {
+  // 预览模式（只读）下禁止任何格式化操作（含 image/link/strong 等）
+  if (isReadOnly.value) {
+    console.log('[DEBUG-readonly] format 操作被预览模式拦截:', type)
+    return
+  }
   editor.value && editor.value.format(type)
 }
 
