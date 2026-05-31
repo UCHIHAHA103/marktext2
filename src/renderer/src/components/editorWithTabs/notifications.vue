@@ -73,8 +73,6 @@ const handleClick = (status) => {
   position: relative;
   display: flex;
   flex-direction: row;
-  width: 100%;
-  box-sizing: border-box;
   max-height: 100px;
   margin-top: 4px;
   background: var(--notificationPrimaryBg);

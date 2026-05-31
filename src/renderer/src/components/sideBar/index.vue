@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useLayoutStore } from '@/store/layout'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
@@ -162,14 +162,27 @@ const { tabs } = storeToRefs(editorStore)
 // 初始宽度从 store 取
 panelWidth.value = +sideBarWidth.value || 280
 
+// 拖拽条可能在悬浮/固定模式切换时被 v-if 重建，watch ref 出现时再绑定
+let dragBarBound = null
+watch(dragBar, (el) => {
+  if (el && el !== dragBarBound) {
+    bindDragBar(el)
+    dragBarBound = el
+  } else if (!el) {
+    dragBarBound = null
+  }
+})
+
 onMounted(() => {
   nextTick(() => {
-    bindDragBar()
+    if (dragBar.value) {
+      bindDragBar(dragBar.value)
+      dragBarBound = dragBar.value
+    }
   })
 })
 
-const bindDragBar = () => {
-  const dragBarEl = dragBar.value
+const bindDragBar = (dragBarEl) => {
   if (!dragBarEl) return
   let startX = 0
   let startWidth = panelWidth.value
@@ -223,11 +236,18 @@ const togglePinned = () => {
   height: 100%;
   flex-shrink: 0;
   user-select: none;
+}
+.mt-sidebar-host.pinned {
   position: relative;
 }
 .mt-sidebar-host.floating {
+  /* 彻底脱离布局流，不影响编辑区宽度，胶囊+浮层 absolute 浮在 .editor-container 内 */
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 0;
   overflow: visible;
+  z-index: 50;
 }
 
 /* ════════════════════════════════════════════
