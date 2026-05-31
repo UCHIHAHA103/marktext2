@@ -1,50 +1,35 @@
 <template>
+  <!-- 悬浮模式：占位 0 宽，胶囊+浮层 absolute 浮在编辑区上 -->
+  <!-- 固定模式：占位 = 面板宽度，整列固定布局 -->
   <div
     v-show="showSideBar"
-    ref="sideBar"
-    class="side-bar"
-    :class="{ pinned: sideBarPinned }"
+    class="mt-sidebar-host"
+    :class="{ pinned: sideBarPinned, floating: !sideBarPinned }"
   >
-    <!-- 图标条：始终可见，45px 宽 -->
-    <div class="left-column">
-      <ul>
-        <li
-          v-for="(c, index) of sideBarIcons"
-          :key="index"
+    <!-- 固定模式：顶部水平按钮组 + 下方面板 -->
+    <div
+      v-if="sideBarPinned"
+      class="fixed-shell"
+      :style="{ width: panelWidth + 'px' }"
+    >
+      <div class="fixed-tabbar">
+        <div
+          v-for="c of sideBarIcons"
+          :key="c.id"
+          class="fixed-tab"
           :class="{ active: c.id === rightColumn }"
-          @click="handleLeftIconClick(c.id)"
+          :title="c.name()"
+          @click="handleIconClick(c.id)"
         >
           <component :is="c.icon" />
-        </li>
-      </ul>
-      <ul class="bottom">
-        <!-- 锁：切换固定/悬浮模式 -->
-        <li
-          class="pin-toggle"
-          :class="{ active: sideBarPinned }"
-          :title="sideBarPinned ? t('sideBar.icons.unpin') : t('sideBar.icons.pin')"
+          <span class="fixed-tab-label">{{ c.name() }}</span>
+        </div>
+        <div
+          class="fixed-tab fixed-unlock"
+          :title="t('sideBar.icons.unpin')"
           @click="togglePinned"
         >
           <svg
-            v-if="sideBarPinned"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect
-              x="5"
-              y="11"
-              width="14"
-              height="10"
-              rx="2"
-            />
-            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-          </svg>
-          <svg
-            v-else
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -61,45 +46,89 @@
             />
             <path d="M8 11V7a4 4 0 0 1 7.9-1" />
           </svg>
-        </li>
-        <li
-          v-for="(c, index) of sideBarBottomIcons"
-          :key="index"
-          @click="handleLeftBottomClick(c.id)"
-        >
-          <component :is="c.icon" />
-        </li>
-      </ul>
-    </div>
-
-    <!-- 面板：悬浮模式叠加在编辑区上，固定模式占据布局宽度 -->
-    <div
-      class="right-column"
-      :class="{ open: !!rightColumn }"
-      :style="rightColumn ? { width: `${sideBarViewWidth}px` } : {}"
-    >
-      <tree
-        v-if="rightColumn === 'files'"
-        :project-tree="projectTree"
-        :opened-files="openedFiles"
-        :tabs="tabs"
-      />
-      <side-bar-search v-else-if="rightColumn === 'search'" />
-      <toc v-else-if="rightColumn === 'toc'" />
-      <!-- 拖拽改宽（在面板内右边缘）-->
+        </div>
+      </div>
+      <div class="fixed-body">
+        <tree
+          v-if="rightColumn === 'files'"
+          :project-tree="projectTree"
+          :opened-files="openedFiles"
+          :tabs="tabs"
+        />
+        <side-bar-search v-else-if="rightColumn === 'search'" />
+        <toc v-else-if="rightColumn === 'toc'" />
+      </div>
       <div
-        v-show="rightColumn"
         ref="dragBar"
         class="drag-bar"
       />
     </div>
 
-    <!-- 悬浮模式下，点击编辑区关闭面板（搜索时不关）；固定模式无遮罩 -->
-    <div
-      v-if="!sideBarPinned && rightColumn && rightColumn !== 'search'"
-      class="panel-overlay"
-      @click="closePanelByOverlay"
-    />
+    <!-- 悬浮模式：毛玻璃胶囊（始终可见）+ 浮层（按需展开） -->
+    <template v-else>
+      <div class="float-pills">
+        <div
+          v-for="c of sideBarIcons"
+          :key="c.id"
+          class="pill-btn"
+          :class="{ active: c.id === rightColumn }"
+          :title="c.name()"
+          @click="handleIconClick(c.id)"
+        >
+          <component :is="c.icon" />
+        </div>
+        <div class="pill-divider" />
+        <div
+          class="pill-btn"
+          :title="t('sideBar.icons.pin')"
+          @click="togglePinned"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect
+              x="5"
+              y="11"
+              width="14"
+              height="10"
+              rx="2"
+            />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+        </div>
+      </div>
+
+      <div
+        class="float-layer"
+        :class="{ show: !!rightColumn }"
+        :style="{ width: panelWidth + 'px' }"
+      >
+        <tree
+          v-if="rightColumn === 'files'"
+          :project-tree="projectTree"
+          :opened-files="openedFiles"
+          :tabs="tabs"
+        />
+        <side-bar-search v-else-if="rightColumn === 'search'" />
+        <toc v-else-if="rightColumn === 'toc'" />
+        <div
+          ref="dragBar"
+          class="drag-bar"
+        />
+      </div>
+
+      <!-- 点击编辑区关闭浮层（搜索时不关）-->
+      <div
+        v-if="rightColumn && rightColumn !== 'search'"
+        class="float-overlay"
+        @click="closePanelByOverlay"
+      />
+    </template>
   </div>
 </template>
 
@@ -110,7 +139,7 @@ import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
 import { useI18n } from 'vue-i18n'
 
-import { sideBarIcons, sideBarBottomIcons } from './help'
+import { sideBarIcons } from './help'
 import Tree from './tree.vue'
 import SideBarSearch from './search.vue'
 import Toc from './toc.vue'
@@ -122,55 +151,54 @@ const layoutStore = useLayoutStore()
 const projectStore = useProjectStore()
 const editorStore = useEditorStore()
 
-const sideBar = ref(null)
 const dragBar = ref(null)
-
 const openedFiles = ref([])
-const sideBarViewWidth = ref(280)
+const panelWidth = ref(280)
 
 const { rightColumn, showSideBar, sideBarWidth, sideBarPinned } = storeToRefs(layoutStore)
-
 const { projectTree } = storeToRefs(projectStore)
 const { tabs } = storeToRefs(editorStore)
 
+// 初始宽度从 store 取
+panelWidth.value = +sideBarWidth.value || 280
+
 onMounted(() => {
   nextTick(() => {
-    const dragBarEl = dragBar.value
-    let startX = 0
-    let currentSideBarWidth = +sideBarWidth.value
-    let startWidth = currentSideBarWidth
-
-    sideBarViewWidth.value = currentSideBarWidth
-
-    const mouseUpHandler = () => {
-      document.removeEventListener('mousemove', mouseMoveHandler, false)
-      document.removeEventListener('mouseup', mouseUpHandler, false)
-      layoutStore.CHANGE_SIDE_BAR_WIDTH(currentSideBarWidth < 220 ? 220 : currentSideBarWidth)
-    }
-
-    const mouseMoveHandler = (event) => {
-      const offset = event.clientX - startX
-      currentSideBarWidth = startWidth + offset
-      sideBarViewWidth.value = currentSideBarWidth
-    }
-
-    const mouseDownHandler = (event) => {
-      startX = event.clientX
-      startWidth = +sideBarWidth.value
-      document.addEventListener('mousemove', mouseMoveHandler, false)
-      document.addEventListener('mouseup', mouseUpHandler, false)
-    }
-
-    dragBarEl.addEventListener('mousedown', mouseDownHandler, false)
+    bindDragBar()
   })
 })
 
-const handleLeftIconClick = (name) => {
+const bindDragBar = () => {
+  const dragBarEl = dragBar.value
+  if (!dragBarEl) return
+  let startX = 0
+  let startWidth = panelWidth.value
+
+  const onMove = (event) => {
+    const offset = event.clientX - startX
+    panelWidth.value = Math.max(220, startWidth + offset)
+  }
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove, false)
+    document.removeEventListener('mouseup', onUp, false)
+    layoutStore.CHANGE_SIDE_BAR_WIDTH(panelWidth.value)
+  }
+  dragBarEl.addEventListener('mousedown', (event) => {
+    startX = event.clientX
+    startWidth = panelWidth.value
+    document.addEventListener('mousemove', onMove, false)
+    document.addEventListener('mouseup', onUp, false)
+  }, false)
+}
+
+const handleIconClick = (name) => {
   if (rightColumn.value === name) {
-    layoutStore.SET_LAYOUT({ rightColumn: '' })
+    // 悬浮模式：再次点击关闭浮层；固定模式：保持打开（避免空白）
+    if (!sideBarPinned.value) {
+      layoutStore.SET_LAYOUT({ rightColumn: '' })
+    }
   } else {
     layoutStore.SET_LAYOUT({ rightColumn: name })
-    sideBarViewWidth.value = +sideBarWidth.value || 280
   }
 }
 
@@ -178,115 +206,208 @@ const closePanelByOverlay = () => {
   layoutStore.SET_LAYOUT({ rightColumn: '' })
 }
 
-const handleLeftBottomClick = (name) => {
-  if (name === 'settings') {
-    projectStore.OPEN_SETTING_WINDOW()
-  }
-}
-
 const togglePinned = () => {
   layoutStore.TOGGLE_SIDE_BAR_PINNED()
   // 切到固定模式且无面板时，默认展开目录
   if (sideBarPinned.value && !rightColumn.value) {
     layoutStore.SET_LAYOUT({ rightColumn: 'toc' })
-    sideBarViewWidth.value = +sideBarWidth.value || 280
   }
 }
 </script>
 
 <style scoped>
-/* 侧边栏外壳：仅占图标条宽度，面板浮动叠加 */
-.side-bar {
-  display: flex;
+/* ════════════════════════════════════════════
+   外壳：悬浮模式占位 0 宽（胶囊浮出），固定模式占位 = 面板宽
+   ════════════════════════════════════════════ */
+.mt-sidebar-host {
+  height: 100%;
   flex-shrink: 0;
-  flex-grow: 0;
-  width: 45px;
-  height: 100%;
-  position: relative;
-  color: var(--sideBarColor);
   user-select: none;
-  background: var(--sideBarBgColor);
-  border-right: 1px solid var(--itemBgColor);
-  z-index: 50;
+  position: relative;
 }
-
-.side-bar .left-column svg {
-  fill: var(--iconColor);
-}
-
-/* 图标条：标题栏移到顶层后无需大 padding-top，8px 留点上边距即可 */
-.left-column {
-  height: 100%;
-  width: 45px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-top: 8px;
-  box-sizing: border-box;
-}
-
-.left-column > ul {
-  opacity: 1;
-}
-
-.left-column ul {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-}
-
-.left-column ul > li {
-  width: 45px;
-  height: 45px;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  cursor: pointer;
-}
-
-.left-column ul > li > svg {
-  width: 18px;
-  height: 18px;
-  fill: var(--sideBarIconColor);
-  opacity: 1;
-  transition: transform 0.25s ease-in-out;
-}
-
-.left-column ul > li.active > svg {
-  fill: var(--themeColor);
-}
-
-.side-bar:hover .left-column ul li svg {
-  opacity: 1;
-}
-
-/* 浮动面板：绝对定位，从图标条右侧展开 */
-.right-column {
-  position: absolute;
-  left: 45px;
-  top: 0;
-  bottom: 0;
+.mt-sidebar-host.floating {
   width: 0;
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* ════════════════════════════════════════════
+   悬浮模式：胶囊 + 浮层（毛玻璃，浮在编辑区上）
+   ════════════════════════════════════════════ */
+.float-pills {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
   background: var(--sideBarBgColor);
-  border-right: 1px solid var(--itemBgColor);
-  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
-  z-index: 100;
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--itemBgColor);
+  border-radius: 11px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+}
+
+.pill-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--sideBarIconColor);
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.pill-btn :deep(svg) {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.pill-btn > svg { /* 内联锁 svg：描边式 */
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+}
+.pill-btn:hover {
+  background: var(--sideBarItemHoverBgColor);
+  color: var(--editorColor);
+}
+.pill-btn:active {
+  transform: scale(0.92);
+}
+.pill-btn.active {
+  background: var(--themeColor);
+  color: #fff;
+}
+.pill-btn.active :deep(svg) {
+  fill: #fff;
+}
+
+.pill-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--itemBgColor);
+  margin: 0 3px;
+}
+
+/* 浮层：飞书风格毛玻璃，浮在编辑区上 */
+.float-layer {
+  position: absolute;
+  top: 56px;
+  left: 14px;
+  height: calc(100% - 76px);
+  z-index: 55;
+  background: var(--sideBarBgColor);
+  border: 1px solid var(--itemBgColor);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top left;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.float-layer.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
-.right-column.open {
-  /* width 由 style 绑定动态设置 */
-  min-width: 220px;
+/* 透明遮罩：点击编辑区关闭浮层 */
+.float-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 54;
+  cursor: default;
 }
 
-/* 拖拽条（在浮动面板右边缘）*/
+/* ════════════════════════════════════════════
+   固定模式：整栏占据布局宽度，顶部水平按钮 + 下方面板
+   ════════════════════════════════════════════ */
+.fixed-shell {
+  height: 100%;
+  background: var(--sideBarBgColor);
+  border-right: 1px solid var(--itemBgColor);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.fixed-tabbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--itemBgColor);
+  flex-shrink: 0;
+}
+.fixed-tab {
+  flex: 1;
+  height: 32px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  color: var(--sideBarIconColor);
+  font-size: 12.5px;
+  transition: background 0.15s, color 0.15s;
+  overflow: hidden;
+}
+.fixed-tab :deep(svg) {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+.fixed-tab > svg { /* 锁 svg */
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+}
+.fixed-tab-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fixed-tab:hover {
+  background: var(--sideBarItemHoverBgColor);
+  color: var(--editorColor);
+}
+.fixed-tab.active {
+  background: var(--themeColor);
+  color: #fff;
+}
+.fixed-tab.active :deep(svg) {
+  fill: #fff;
+}
+.fixed-tab.fixed-unlock {
+  flex: 0 0 32px;
+}
+
+.fixed-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 拖拽条 */
 .drag-bar {
   position: absolute;
   top: 0;
@@ -294,52 +415,10 @@ const togglePinned = () => {
   bottom: 0;
   width: 4px;
   cursor: col-resize;
-  z-index: 101;
+  z-index: 5;
 }
-
 .drag-bar:hover {
-  background: var(--iconColor);
+  background: var(--themeColor);
   opacity: 0.4;
-}
-
-/* 点击编辑区关闭浮动面板的透明遮罩 */
-.panel-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 99;
-  cursor: default;
-}
-
-/* 锁按钮：固定模式时高亮主题色 */
-.left-column ul > li.pin-toggle > svg {
-  width: 17px;
-  height: 17px;
-  stroke: var(--sideBarIconColor);
-  fill: none;
-}
-.left-column ul > li.pin-toggle.active > svg {
-  stroke: var(--themeColor);
-}
-
-/* ─── 固定模式：面板占据布局宽度，不再浮动叠加 ─── */
-.side-bar.pinned {
-  display: flex;
-  flex-direction: row;
-  width: auto;
-}
-.side-bar.pinned .right-column {
-  position: relative;
-  left: auto;
-  top: auto;
-  bottom: auto;
-  box-shadow: none;
-  transition: none;
-}
-.side-bar.pinned .right-column.open {
-  /* width 仍由 style 绑定 */
-  min-width: 220px;
 }
 </style>
