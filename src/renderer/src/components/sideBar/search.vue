@@ -336,7 +336,8 @@ onMounted(() => {
 .side-bar-search {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
+  padding-bottom: 8px;
 }
 .search-wrapper {
   display: flex;

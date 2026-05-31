@@ -1,7 +1,14 @@
 <template>
   <div class="tree-view">
-    <div class="pane-title">
-      {{ t('sideBar.tree.filesTitle') }}
+    <div class="pane-title pane-title--with-action">
+      <span>{{ t('sideBar.tree.filesTitle') }}</span>
+      <button
+        v-if="!projectTree"
+        class="pane-action-btn"
+        @click="openFolder"
+      >
+        {{ t('sideBar.tree.openFolder') }}
+      </button>
     </div>
     <!-- Opened tabs -->
     <div class="opened-files">
@@ -124,19 +131,6 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-    <div
-      v-else
-      class="open-project"
-    >
-      <div class="centered-group">
-        <button
-          class="button-primary"
-          @click="openFolder"
-        >
-          {{ t('sideBar.tree.openFolder') }}
-        </button>
       </div>
     </div>
   </div>
@@ -264,7 +258,8 @@ onMounted(() => {
   color: var(--sideBarColor);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* 高度由父级（.float-layer max-height 或 .fixed-body flex）控制，自身不强制 100% */
+  min-height: 0;
 }
 .tree-view > .title {
   height: 35px;

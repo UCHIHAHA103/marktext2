@@ -335,12 +335,9 @@ const togglePinned = () => {
   pointer-events: none;
   transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* files / search：固定高度（撑满可用区） */
+/* 浮层高度统一用 max-height 自适应内容（不超过可用区） */
 .float-layer--files,
-.float-layer--search {
-  height: calc(100% - 116px);
-}
-/* toc：内容自适应高度，但不超过可用区（最高 100%-116px） */
+.float-layer--search,
 .float-layer--toc {
   max-height: calc(100% - 116px);
 }
@@ -369,6 +366,27 @@ const togglePinned = () => {
   letter-spacing: 0.2px;
   flex-shrink: 0;
   user-select: none;
+}
+/* 标题行内带操作按钮（如"打开文件夹"），左标题右按钮 */
+.float-layer :deep(.pane-title--with-action) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.float-layer :deep(.pane-action-btn) {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--themeColor);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.float-layer :deep(.pane-action-btn:hover) {
+  opacity: 0.85;
 }
 
 /* 透明遮罩：点击编辑区关闭浮层 */
@@ -471,6 +489,26 @@ const togglePinned = () => {
   letter-spacing: 0.2px;
   flex-shrink: 0;
   user-select: none;
+}
+.fixed-body :deep(.pane-title--with-action) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fixed-body :deep(.pane-action-btn) {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--themeColor);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.fixed-body :deep(.pane-action-btn:hover) {
+  opacity: 0.85;
 }
 .fixed-body :deep(*) {
   scrollbar-width: none;

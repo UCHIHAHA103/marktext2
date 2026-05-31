@@ -819,8 +819,19 @@ const scrollToHighlight = () => {
 }
 
 const scrollToHeader = (slug) => {
+  // [DEBUG-toc-spy] 点击目录跳转：设 isJumping 暂停 spy 干扰，跳转后 700ms 恢复
+  console.log('[DEBUG-toc-spy] scrollToHeader 点击 slug=' + slug)
+  isJumping = true
+  // 立即设当前高亮，并在跳转期间锁定它（不让 spy 改）
+  activeHeadingSlug = slug
+  bus.emit('toc-active-heading', slug)
   scrollToElement(`#${slug}`)
   flashHeading(slug)
+  clearTimeout(jumpTimer)
+  jumpTimer = setTimeout(() => {
+    isJumping = false
+    console.log('[DEBUG-toc-spy] isJumping 解除')
+  }, 700)
 }
 
 // 点击目录跳转后，让目标标题闪现高亮再淡出，帮助用户聚焦
@@ -840,19 +851,30 @@ const flashHeading = (slug) => {
 // 滚动联动高亮（Scroll Spy）：算出当前阅读位置对应的标题，广播给目录
 let activeHeadingSlug = null
 let spyTicking = false
+let isJumping = false
+let jumpTimer = null
 const computeActiveHeading = () => {
+  if (isJumping) {
+    // 跳转期间不让 spy 改高亮，避免覆盖点击设的目标
+    console.log('[DEBUG-toc-spy] computeActiveHeading 跳过(isJumping)')
+    return
+  }
   const list = editorStore.listToc
   if (!list || list.length === 0) return
   const { container } = editor.value
   if (!container) return
-  // 阈值线设在容器顶部下方 100px，标题滚过此线即视为当前阅读位置
-  const threshold = container.getBoundingClientRect().top + 100
+  // 阈值线必须 >= STANDAR_Y(320, muya 滚动锚点) + 小容差，
+  // 否则点击跳转后目标标题刚好停在 320px 位置, top<=阈值不成立 → 高亮被锁到上一个标题
+  const threshold = container.getBoundingClientRect().top + STANDAR_Y + 20
   let current = list[0].slug
+  let matchedTop = null
   for (const item of list) {
     const el = document.getElementById(item.slug)
     if (!el) continue
-    if (el.getBoundingClientRect().top <= threshold) {
+    const top = el.getBoundingClientRect().top
+    if (top <= threshold) {
       current = item.slug
+      matchedTop = top
     } else {
       break
     }
@@ -862,6 +884,7 @@ const computeActiveHeading = () => {
     current = list[list.length - 1].slug
   }
   if (current !== activeHeadingSlug) {
+    console.log(`[DEBUG-toc-spy] spy 切换高亮: ${activeHeadingSlug} -> ${current} (匹配标题 top=${matchedTop?.toFixed(1)}, threshold=${threshold.toFixed(1)})`)
     activeHeadingSlug = current
     bus.emit('toc-active-heading', current)
   }
