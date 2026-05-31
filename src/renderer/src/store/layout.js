@@ -25,7 +25,7 @@ const sideBarPinned = localStorage.getItem('side-bar-pinned') === 'true'
 
 export const useLayoutStore = defineStore('layout', {
   state: () => ({
-    rightColumn: 'files',
+    rightColumn: '',
     showSideBar: false,
     showTabBar: false,
     sideBarWidth,

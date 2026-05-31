@@ -5,12 +5,12 @@
     v-show="showSideBar"
     class="mt-sidebar-host"
     :class="{ pinned: sideBarPinned, floating: !sideBarPinned }"
+    :style="sideBarPinned ? { width: panelWidth + 'px' } : null"
   >
     <!-- 固定模式：顶部水平按钮组 + 下方面板 -->
     <div
       v-if="sideBarPinned"
       class="fixed-shell"
-      :style="{ width: panelWidth + 'px' }"
     >
       <div class="fixed-tabbar">
         <div
@@ -235,7 +235,7 @@ const togglePinned = () => {
    ════════════════════════════════════════════ */
 .float-pills {
   position: absolute;
-  top: 12px;
+  top: 52px;
   left: 14px;
   z-index: 60;
   display: flex;
@@ -258,13 +258,16 @@ const togglePinned = () => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--sideBarIconColor);
+  color: rgb(100, 106, 115);
   transition: background 0.15s, color 0.15s, transform 0.1s;
 }
 .pill-btn :deep(svg) {
   width: 16px;
   height: 16px;
-  fill: currentColor;
+  fill: currentColor !important;
+}
+.pill-btn :deep(svg *) {
+  fill: currentColor !important;
 }
 .pill-btn > svg { /* 内联锁 svg：描边式 */
   width: 16px;
@@ -283,8 +286,9 @@ const togglePinned = () => {
   background: var(--themeColor);
   color: #fff;
 }
-.pill-btn.active :deep(svg) {
-  fill: #fff;
+.pill-btn.active :deep(svg),
+.pill-btn.active :deep(svg *) {
+  fill: #fff !important;
 }
 
 .pill-divider {
@@ -297,9 +301,9 @@ const togglePinned = () => {
 /* 浮层：飞书风格毛玻璃，浮在编辑区上 */
 .float-layer {
   position: absolute;
-  top: 56px;
+  top: 96px;
   left: 14px;
-  height: calc(100% - 76px);
+  height: calc(100% - 116px);
   z-index: 55;
   background: var(--sideBarBgColor);
   border: 1px solid var(--itemBgColor);
@@ -337,12 +341,14 @@ const togglePinned = () => {
    固定模式：整栏占据布局宽度，顶部水平按钮 + 下方面板
    ════════════════════════════════════════════ */
 .fixed-shell {
+  width: 100%;
   height: 100%;
   background: var(--sideBarBgColor);
   border-right: 1px solid var(--itemBgColor);
   display: flex;
   flex-direction: column;
   position: relative;
+  box-sizing: border-box;
 }
 
 .fixed-tabbar {
@@ -362,7 +368,7 @@ const togglePinned = () => {
   justify-content: center;
   gap: 5px;
   cursor: pointer;
-  color: var(--sideBarIconColor);
+  color: rgb(100, 106, 115);
   font-size: 12.5px;
   transition: background 0.15s, color 0.15s;
   overflow: hidden;
@@ -370,8 +376,11 @@ const togglePinned = () => {
 .fixed-tab :deep(svg) {
   width: 15px;
   height: 15px;
-  fill: currentColor;
+  fill: currentColor !important;
   flex-shrink: 0;
+}
+.fixed-tab :deep(svg *) {
+  fill: currentColor !important;
 }
 .fixed-tab > svg { /* 锁 svg */
   width: 15px;
@@ -392,8 +401,9 @@ const togglePinned = () => {
   background: var(--themeColor);
   color: #fff;
 }
-.fixed-tab.active :deep(svg) {
-  fill: #fff;
+.fixed-tab.active :deep(svg),
+.fixed-tab.active :deep(svg *) {
+  fill: #fff !important;
 }
 .fixed-tab.fixed-unlock {
   flex: 0 0 32px;
