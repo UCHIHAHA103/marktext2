@@ -249,10 +249,15 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0; /* [centering-fix] 关键修复：flex 子项默认 min-width:auto 不允许收缩到内容宽度以下，
+                   导致编辑区被长内容撑到 2872px 远超父级 1873px，正文整体偏右。
+                   加 min-width:0 允许被父级压缩到正确宽度。 */
   min-height: 0;
   position: relative;
+  overflow: hidden;
   & > .editor {
     flex: 1;
+    min-width: 0;
   }
 }
 </style>

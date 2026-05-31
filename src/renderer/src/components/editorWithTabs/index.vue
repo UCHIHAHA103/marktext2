@@ -22,8 +22,6 @@
 </template>
 
 <script setup>
-import { useLayoutStore } from '@/store/layout'
-import { storeToRefs } from 'pinia'
 import Tabs from './tabs.vue'
 import Editor from './editor.vue'
 import SourceCode from './sourceCode.vue'
@@ -60,10 +58,6 @@ defineProps({
     required: true
   }
 })
-
-const layoutStore = useLayoutStore()
-
-const { showSideBar, sideBarWidth } = storeToRefs(layoutStore)
 </script>
 
 <style scoped>
@@ -71,6 +65,7 @@ const { showSideBar, sideBarWidth } = storeToRefs(layoutStore)
   position: relative;
   height: 100%;
   flex: 1;
+  min-width: 0; /* [centering-fix] flex 子项 min-width:auto 会被内容撑大，必须设 0 才能被父级压缩 */
   display: flex;
   flex-direction: column;
 
@@ -78,6 +73,7 @@ const { showSideBar, sideBarWidth } = storeToRefs(layoutStore)
   background: var(--editorBgColor);
   & > .container {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
   }
 }
