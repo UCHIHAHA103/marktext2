@@ -65,7 +65,6 @@ const commandAPI = {
 
         for (const picgoPath of commonPaths) {
           if (fs.pathExistsSync(picgoPath)) {
-            console.log(`Found picgo at: ${picgoPath}`)
             return true
           }
         }

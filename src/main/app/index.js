@@ -824,17 +824,13 @@ class App {
           return false
         }
         const { width, height } = ni.getSize()
-        console.log('[clipboard] 图片尺寸:', width, 'x', height, filePath)
         // 超大图片（如 13234×5499）展开为 ~291MB 位图，Windows 剪贴板可能静默拒绝
         // 限制到 4096px 内，缩放后仍保持高清效果
         if (width > 4096 || height > 4096) {
           const ratio = Math.min(4096 / width, 4096 / height)
           ni = ni.resize({ width: Math.round(width * ratio) })
-          const ns = ni.getSize()
-          console.log('[clipboard] 超大图片缩放至:', ns.width, 'x', ns.height)
         }
         clipboard.writeImage(ni)
-        console.log('[clipboard] 文件路径写剪贴板成功:', filePath)
         return true
       } catch (e) {
         console.error('[clipboard] 文件路径写图片失败:', e)

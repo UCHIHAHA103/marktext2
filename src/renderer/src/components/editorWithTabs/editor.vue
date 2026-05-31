@@ -532,7 +532,6 @@ const imageAction = async (image, id, alt = '') => {
   // Figure out the current working directory.
   // Save an image relative to the file, otherwise use the project root when available.
   const isTabSavedOnDisk = !!currentPathname
-  console.log('isTabSavedOnDisk', isTabSavedOnDisk, 'currentPathname', currentPathname)
   let relativeBasePath = isTabSavedOnDisk ? window.path.dirname(currentPathname) : null
   if (isTabSavedOnDisk && imageRelativeDirectoryBase.value !== 'file' && projectTree.value) {
     const { pathname: rootPath } = projectTree.value
@@ -599,11 +598,6 @@ const imageAction = async (image, id, alt = '') => {
         destImagePath = image
       } else {
         // Save and move image to image folder if input is binary.
-        console.log('imageAction: moving image to relative directory', {
-          resolvedImageRelativeFullDirectoryPath,
-          resolvedImageRelativeDirectoryName
-        })
-
         // Respect user preferences if tab exists on disk.
         if (isTabSavedOnDisk && imagePreferRelativeDirectory.value) {
           destImagePath = await moveImageToFolder(
@@ -613,7 +607,6 @@ const imageAction = async (image, id, alt = '') => {
             true,
             currentPathname
           )
-          console.log('moved image to relative directory', { destImagePath })
         } else {
           destImagePath = await moveImageToFolder(
             currentPathname,
@@ -1268,7 +1261,6 @@ onMounted(() => {
   // 图片灯箱：由 clickEvent 或 keyboard（Space键）触发
   editor.value.on('muya-image-lightbox', ({ imageInfo }) => {
     const src = imageInfo.absoluteImagePath || (imageInfo.token && imageInfo.token.attrs && imageInfo.token.attrs.src)
-    console.log('[lightbox] muya-image-lightbox 收到，src:', src, 'imageInfo:', imageInfo)
     showLightboxForSrc(src)
   })
 

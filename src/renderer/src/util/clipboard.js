@@ -9,7 +9,6 @@ export const guessClipboardFilePath = () => {
     if (window.electron && window.electron.clipboard && window.electron.clipboard.readFilePaths) {
       const files = window.electron.clipboard.readFilePaths()
       if (files && files.length > 0) {
-        console.log('[clipboard] 剪贴板文件路径:', files[0])
         return files[0]
       }
     }
