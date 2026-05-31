@@ -105,8 +105,7 @@
 
       <div
         class="float-layer"
-        :class="{ show: !!rightColumn }"
-        :style="{ width: panelWidth + 'px' }"
+        :class="['float-layer--' + (rightColumn || 'none'), { show: !!rightColumn }]"
       >
         <tree
           v-if="rightColumn === 'files'"
@@ -116,10 +115,6 @@
         />
         <side-bar-search v-else-if="rightColumn === 'search'" />
         <toc v-else-if="rightColumn === 'toc'" />
-        <div
-          ref="dragBar"
-          class="drag-bar"
-        />
       </div>
 
       <!-- 点击编辑区关闭浮层（搜索时不关）-->
@@ -318,12 +313,12 @@ const togglePinned = () => {
   margin: 0 3px;
 }
 
-/* 浮层：飞书风格毛玻璃，浮在编辑区上 */
+/* 浮层：飞书风格毛玻璃，浮在编辑区上。宽度锁死 280，三种模式高度处理不同 */
 .float-layer {
   position: absolute;
   top: 96px;
   left: 14px;
-  height: calc(100% - 116px);
+  width: 280px;
   z-index: 55;
   background: var(--sideBarBgColor);
   border: 1px solid var(--itemBgColor);
@@ -340,10 +335,40 @@ const togglePinned = () => {
   pointer-events: none;
   transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/* files / search：固定高度（撑满可用区） */
+.float-layer--files,
+.float-layer--search {
+  height: calc(100% - 116px);
+}
+/* toc：内容自适应高度，但不超过可用区（最高 100%-116px） */
+.float-layer--toc {
+  max-height: calc(100% - 116px);
+}
 .float-layer.show {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
+}
+
+/* 浮层内部隐藏滚动条但保留鼠标滚轮滚动能力 */
+.float-layer :deep(*) {
+  scrollbar-width: none; /* Firefox */
+}
+.float-layer :deep(*::-webkit-scrollbar) {
+  display: none; /* Chromium */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 浮层内统一的标题样式（替换各 pane 自带的 title） */
+.float-layer :deep(.pane-title) {
+  padding: 14px 16px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--editorColor50, rgba(127, 127, 127, 0.65));
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 /* 透明遮罩：点击编辑区关闭浮层 */
@@ -435,6 +460,25 @@ const togglePinned = () => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+/* 固定模式同样统一 pane-title 样式 + 隐藏滚动条 */
+.fixed-body :deep(.pane-title) {
+  padding: 14px 16px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--editorColor50, rgba(127, 127, 127, 0.65));
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+  user-select: none;
+}
+.fixed-body :deep(*) {
+  scrollbar-width: none;
+}
+.fixed-body :deep(*::-webkit-scrollbar) {
+  display: none;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* 拖拽条 */

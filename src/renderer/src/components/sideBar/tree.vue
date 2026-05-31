@@ -1,9 +1,8 @@
 <template>
   <div class="tree-view">
-    <div class="title">
-      <!-- Placeholder -->
+    <div class="pane-title">
+      {{ t('sideBar.tree.filesTitle') }}
     </div>
-
     <!-- Opened tabs -->
     <div class="opened-files">
       <div class="title">

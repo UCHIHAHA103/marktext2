@@ -1,5 +1,8 @@
 <template>
   <div class="side-bar-search">
+    <div class="pane-title">
+      {{ t('sideBar.search.title') }}
+    </div>
     <div class="search-wrapper">
       <input
         ref="searchEl"

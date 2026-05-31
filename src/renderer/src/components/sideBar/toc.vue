@@ -3,7 +3,7 @@
     class="side-bar-toc"
     :class="[{ 'side-bar-toc-overflow': !wordWrapInToc, 'side-bar-toc-wordwrap': wordWrapInToc }]"
   >
-    <div class="title">
+    <div class="pane-title">
       {{ t('sideBar.toc.title') }}
     </div>
     <el-tree
@@ -65,20 +65,15 @@ onBeforeUnmount(() => {
 
 <style>
 .side-bar-toc {
-  height: calc(100% - 35px);
+  /* 高度由父级（.float-layer--toc max-height 或 .fixed-body flex）控制，自身只决定布局方向 */
   margin: 0;
-  padding: 0;
+  padding: 0 0 8px 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-}
-
-.side-bar-toc .title {
-  color: var(--sideBarTitleColor);
-  font-weight: 600;
-  font-size: 16px;
-  margin: 37px 0 10px 0;
-  padding-left: 25px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .side-bar-toc .el-tree-node {
