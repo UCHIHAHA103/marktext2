@@ -19,7 +19,7 @@
         </el-col>
         <el-col :span="24">
           <div class="text">
-            v{{ store.appVersion }}
+            {{ store.appVersion }}
           </div>
         </el-col>
         <el-col :span="24">
@@ -108,23 +108,49 @@ const checkUpdate = async () => {
   updateMessage.value = ''
   updateLevel.value = ''
   updateUrl.value = ''
+  console.log('[checkUpdate] start, current=' + store.appVersion)
   try {
     let release = null
+    let firstErr = null
     try {
-      const r = await fetch(RELEASES_API, { headers: { Accept: 'application/vnd.github+json' } })
-      if (r.ok) release = await r.json()
-    } catch (_) { /* fallback */ }
+      console.log('[checkUpdate] fetching /releases/latest...')
+      const r = await fetch(RELEASES_API, {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        },
+        cache: 'no-store'
+      })
+      console.log('[checkUpdate] /latest response status=' + r.status)
+      if (r.ok) {
+        release = await r.json()
+      } else {
+        firstErr = `HTTP ${r.status}`
+      }
+    } catch (e) {
+      firstErr = e.message || String(e)
+      console.warn('[checkUpdate] /latest error:', e)
+    }
     // /releases/latest 不返回 prerelease，回落到 /releases 取第一条
     if (!release || !release.tag_name) {
-      const r = await fetch(RELEASES_API_FALLBACK, { headers: { Accept: 'application/vnd.github+json' } })
-      if (!r.ok) throw new Error(`GitHub API ${r.status}`)
+      console.log('[checkUpdate] fallback to /releases (含 prerelease)...')
+      const r = await fetch(RELEASES_API_FALLBACK, {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        },
+        cache: 'no-store'
+      })
+      console.log('[checkUpdate] /releases response status=' + r.status)
+      if (!r.ok) throw new Error(`GitHub API ${r.status} (latest err: ${firstErr || 'n/a'})`)
       const list = await r.json()
       release = Array.isArray(list) && list.length ? list[0] : null
     }
-    if (!release || !release.tag_name) throw new Error('no release')
+    if (!release || !release.tag_name) throw new Error('no release found')
 
     const latest = release.tag_name
     const current = store.appVersion
+    console.log(`[checkUpdate] latest=${latest}, current=${current}`)
     const cmp = compareVersion(latest, current)
     updateUrl.value = release.html_url || ''
 
@@ -134,12 +160,14 @@ const checkUpdate = async () => {
     } else {
       updateLevel.value = 'info'
       updateMessage.value = t('about.upToDate')
-      updateUrl.value = '' // 已最新就不显示链接
+      updateUrl.value = ''
     }
   } catch (err) {
     console.error('[checkUpdate] failed:', err)
     updateLevel.value = 'error'
-    updateMessage.value = t('about.checkFailed')
+    // 把具体错误也展示出来便于排查
+    const detail = (err && err.message) ? err.message : String(err)
+    updateMessage.value = t('about.checkFailed') + '：' + detail
   } finally {
     updateChecking.value = false
   }

@@ -818,14 +818,29 @@ const scrollToHighlight = () => {
   return scrollToElement('.ag-highlight')
 }
 
+// TOC 跳转/spy 共用的目标标题在容器顶部下方的偏移量（贴近顶部，不挤压视觉）
+const TOC_HEADER_OFFSET = 60
+
 const scrollToHeader = (slug) => {
-  // [DEBUG-toc-spy] 点击目录跳转：设 isJumping 暂停 spy 干扰，跳转后 700ms 恢复
   console.log('[DEBUG-toc-spy] scrollToHeader 点击 slug=' + slug)
   isJumping = true
-  // 立即设当前高亮，并在跳转期间锁定它（不让 spy 改）
   activeHeadingSlug = slug
   bus.emit('toc-active-heading', slug)
-  scrollToElement(`#${slug}`)
+
+  // 不用 muya 的 scrollToElement(基于 STANDAR_Y=320 把目标置于中部), 改成直接滚到目标贴顶
+  const container = editor.value && editor.value.container
+  const anchor = document.getElementById(slug)
+  if (container && anchor) {
+    const cRect = container.getBoundingClientRect()
+    const aRect = anchor.getBoundingClientRect()
+    // 目标贴近容器顶部下方 TOC_HEADER_OFFSET (60px)
+    const targetScrollTop = container.scrollTop + (aRect.top - cRect.top) - TOC_HEADER_OFFSET
+    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' })
+  } else {
+    // 兜底：用 muya 默认行为
+    scrollToElement(`#${slug}`)
+  }
+
   flashHeading(slug)
   clearTimeout(jumpTimer)
   jumpTimer = setTimeout(() => {
@@ -863,9 +878,9 @@ const computeActiveHeading = () => {
   if (!list || list.length === 0) return
   const { container } = editor.value
   if (!container) return
-  // 阈值线 = STANDAR_Y - 10：muya 滚动后目标标题刚好在此线略下方位置
-  // 太大→多算一个下一个标题；太小→算到上一个。STANDAR_Y(320)-10=310 经验最佳
-  const threshold = container.getBoundingClientRect().top + STANDAR_Y - 10
+  // 阈值 = TOC_HEADER_OFFSET + 容差：目标停在容器顶下方 60px，
+  // 阈值 80 让目标 top≤80 时算激活，避免误差导致跳到上一个或下一个
+  const threshold = container.getBoundingClientRect().top + TOC_HEADER_OFFSET + 20
   let current = list[0].slug
   let matchedTop = null
   for (const item of list) {
