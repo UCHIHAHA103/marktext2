@@ -92,8 +92,12 @@ const handleClick = (status) => {
 .msg {
   font-size: 13px;
   flex: 1;
+  /* min-width:0 允许 flex 子项收缩到内容以下，否则长文字会撑爆容器把按钮挤出 overflow:hidden */
+  min-width: 0;
 }
 .controls {
+  /* flex-shrink:0 保证按钮区永远不被压缩 */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;

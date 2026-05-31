@@ -1127,6 +1127,54 @@ onMounted(() => {
   printer = new Printer()
   const ele = editorRef.value
 
+  // [DEBUG-centering-a4f2] 正文居中诊断日志：跟踪从 .app-root 到 #ag-editor-id 每层的实际宽度
+  // 如果某层 offsetWidth 远小于其父级 offsetWidth，说明该层 CSS width 没撑满 → 居中失败
+  const __debugCentering = (label) => {
+    try {
+      const findUp = (sel) => {
+        let n = ele
+        while (n && n !== document.body) {
+          if (n.classList && (n.matches?.(sel) || n.classList.contains(sel.replace('.', '')))) return n
+          n = n.parentElement
+        }
+        return null
+      }
+      const root = document.querySelector('.app-root')
+      const editorContainer = document.querySelector('.editor-container')
+      const editorMiddle = document.querySelector('.editor-middle')
+      const ewt = document.querySelector('.editor-with-tabs')
+      const container = document.querySelector('.editor-with-tabs > .container')
+      const wrapper = findUp('.editor-wrapper')
+      const component = ele // .editor-component
+      const agEditorId = document.getElementById('ag-editor-id')
+
+      const dump = (name, el) => {
+        if (!el) return console.log(`[DEBUG-centering-a4f2] ${label} | ${name}: <missing>`)
+        const cs = getComputedStyle(el)
+        console.log(`[DEBUG-centering-a4f2] ${label} | ${name}: offsetW=${el.offsetWidth}, clientW=${el.clientWidth}, cssWidth=${cs.width}, marginL=${cs.marginLeft}, marginR=${cs.marginRight}, paddingL=${cs.paddingLeft}, paddingR=${cs.paddingRight}, position=${cs.position}, display=${cs.display}, flex=${cs.flex}, maxWidth=${cs.maxWidth}, boxSizing=${cs.boxSizing}`)
+      }
+      console.log(`[DEBUG-centering-a4f2] ===== ${label} | window.innerWidth=${window.innerWidth} =====`)
+      dump('.app-root             ', root)
+      dump('.editor-container     ', editorContainer)
+      dump('.editor-middle        ', editorMiddle)
+      dump('.editor-with-tabs     ', ewt)
+      dump('.container (in EWT)   ', container)
+      dump('.editor-wrapper       ', wrapper)
+      dump('.editor-component(ele)', component)
+      dump('#ag-editor-id         ', agEditorId)
+      // 居中性验证：#ag-editor-id 的 (左空白 - 右空白) 应接近 0
+      if (agEditorId) {
+        const r = agEditorId.getBoundingClientRect()
+        const pr = (agEditorId.parentElement && agEditorId.parentElement.getBoundingClientRect()) || { left: 0, right: window.innerWidth }
+        const leftGap = r.left - pr.left
+        const rightGap = pr.right - r.right
+        console.log(`[DEBUG-centering-a4f2] ${label} | #ag-editor-id 居中性: leftGap=${leftGap.toFixed(1)}px, rightGap=${rightGap.toFixed(1)}px, 差=${(leftGap - rightGap).toFixed(1)}px (接近0=居中正常)`)
+      }
+    } catch (e) {
+      console.warn('[DEBUG-centering-a4f2] dump fail:', e)
+    }
+  }
+
   // use muya UI plugins
   Muya.use(TablePicker)
   Muya.use(QuickInsert)
@@ -1198,6 +1246,16 @@ onMounted(() => {
   }
 
   editor.value = new Muya(ele, options)
+
+  // [DEBUG-centering-a4f2] 关键时机的宽度链路 dump
+  __debugCentering('Muya 初始化后')
+  setTimeout(() => __debugCentering('100ms 后'), 100)
+  setTimeout(() => __debugCentering('500ms 后'), 500)
+  setTimeout(() => __debugCentering('2000ms 后(应已渲染稳定)'), 2000)
+  // 监听 window resize，每次窗口大小变化时打日志
+  window.addEventListener('resize', () => {
+    __debugCentering(`window resize -> ${window.innerWidth}px`)
+  })
 
   // #2286: 初始化时同步列表紧凑模式
   if (listTightMode.value) {
@@ -1431,6 +1489,10 @@ onBeforeUnmount(() => {
 }
 
 .editor-component {
+  /* [centering-fix] 显式 width:100% 修复 5a79cd5b 后正文不居中
+     根因：app.vue 改造后 .editor-container 不再 absolute+100vw，宽度靠 flex 链路传递；
+     .editor-component 默认 width:auto 在 flex 父容器中不一定撑满，导致 #ag-editor-id 父级宽度异常 */
+  width: 100%;
   height: 100%;
   overflow: auto;
   box-sizing: border-box;
