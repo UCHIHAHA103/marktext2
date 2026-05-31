@@ -924,7 +924,13 @@
   },
   "about": {
     "copyright": "Copyright © Luo Ran 2017-{year}",
-    "copyrightContributors": "Made with <3 by Github Contributors"
+    "copyrightContributors": "Made with <3 by Github Contributors",
+    "checkUpdate": "Check for updates",
+    "checking": "Checking...",
+    "upToDate": "You are up to date",
+    "newVersion": "New version available: {version}",
+    "viewRelease": "View release",
+    "checkFailed": "Check failed, please retry"
   },
   "commands": {
     "mt": {

@@ -919,7 +919,13 @@
   },
   "about": {
     "copyright": "版權",
-    "copyrightContributors": "版權貢獻者"
+    "copyrightContributors": "版權貢獻者",
+    "checkUpdate": "檢查更新",
+    "checking": "檢查中…",
+    "upToDate": "已是最新版本",
+    "newVersion": "發現新版本：{version}",
+    "viewRelease": "查看發布頁",
+    "checkFailed": "檢查失敗，請重試"
   },
   "commands": {
     "mt": {

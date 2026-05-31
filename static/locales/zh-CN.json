@@ -926,7 +926,13 @@
   },
   "about": {
     "copyright": "版权",
-    "copyrightContributors": "版权贡献者"
+    "copyrightContributors": "版权贡献者",
+    "checkUpdate": "检查更新",
+    "checking": "检查中…",
+    "upToDate": "已是最新版本",
+    "newVersion": "发现新版本：{version}",
+    "viewRelease": "查看发布页",
+    "checkFailed": "检查失败，请重试"
   },
   "commands": {
     "mt": {
