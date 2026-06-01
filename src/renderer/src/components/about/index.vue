@@ -109,41 +109,34 @@ const checkUpdate = async () => {
   updateLevel.value = ''
   updateUrl.value = ''
   console.log('[checkUpdate] start, current=' + store.appVersion)
+  // 走 main 进程 IPC 请求, 绕过 renderer 的 CSP / fetch UA 限制
+  const httpGet = window.electron?.ipcRenderer?.invoke
+  if (!httpGet) {
+    updateLevel.value = 'error'
+    updateMessage.value = t('about.checkFailed') + '：IPC 不可用'
+    updateChecking.value = false
+    return
+  }
   try {
     let release = null
     let firstErr = null
-    try {
-      console.log('[checkUpdate] fetching /releases/latest...')
-      const r = await fetch(RELEASES_API, {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        },
-        cache: 'no-store'
-      })
-      console.log('[checkUpdate] /latest response status=' + r.status)
-      if (r.ok) {
-        release = await r.json()
-      } else {
-        firstErr = `HTTP ${r.status}`
-      }
-    } catch (e) {
-      firstErr = e.message || String(e)
-      console.warn('[checkUpdate] /latest error:', e)
+
+    console.log('[checkUpdate] fetching /releases/latest via IPC...')
+    const r1 = await window.electron.ipcRenderer.invoke('mt::http-get-json', RELEASES_API, { 'X-GitHub-Api-Version': '2022-11-28' })
+    console.log(`[checkUpdate] /latest result: ok=${r1.ok}, status=${r1.status}, error=${r1.error || ''}`)
+    if (r1.ok && r1.data && r1.data.tag_name) {
+      release = r1.data
+    } else {
+      firstErr = r1.error ? r1.error : `HTTP ${r1.status}`
     }
+
     // /releases/latest 不返回 prerelease，回落到 /releases 取第一条
     if (!release || !release.tag_name) {
       console.log('[checkUpdate] fallback to /releases (含 prerelease)...')
-      const r = await fetch(RELEASES_API_FALLBACK, {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        },
-        cache: 'no-store'
-      })
-      console.log('[checkUpdate] /releases response status=' + r.status)
-      if (!r.ok) throw new Error(`GitHub API ${r.status} (latest err: ${firstErr || 'n/a'})`)
-      const list = await r.json()
+      const r2 = await window.electron.ipcRenderer.invoke('mt::http-get-json', RELEASES_API_FALLBACK, { 'X-GitHub-Api-Version': '2022-11-28' })
+      console.log(`[checkUpdate] /releases result: ok=${r2.ok}, status=${r2.status}, error=${r2.error || ''}`)
+      if (!r2.ok) throw new Error(`GitHub API ${r2.status || 'NETWORK'} (latest err: ${firstErr || 'n/a'}; current err: ${r2.error || 'n/a'})`)
+      const list = r2.data
       release = Array.isArray(list) && list.length ? list[0] : null
     }
     if (!release || !release.tag_name) throw new Error('no release found')

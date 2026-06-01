@@ -812,8 +812,52 @@ class App {
       }
     })
 
+    // 主进程 HTTP GET（绕过 renderer 的 CSP / fetch UA 限制）
+    // 用于检查更新等需要访问外部 API 的场景
+    ipcMain.handle('mt::http-get-json', (event, url, headers = {}) => {
+      console.log('[mt::http-get-json] 请求 url=' + url)
+      return new Promise((resolve) => {
+        try {
+          const https = require('https')
+          const u = new URL(url)
+          const options = {
+            method: 'GET',
+            hostname: u.hostname,
+            path: u.pathname + (u.search || ''),
+            headers: {
+              'User-Agent': `marktext-app/${app.getVersion()}`,
+              Accept: 'application/vnd.github+json',
+              ...headers
+            },
+            timeout: 15000
+          }
+          const req = https.request(options, (res) => {
+            let body = ''
+            res.on('data', (chunk) => { body += chunk })
+            res.on('end', () => {
+              console.log(`[mt::http-get-json] response status=${res.statusCode}, len=${body.length}`)
+              let data = null
+              try { data = JSON.parse(body) } catch (e) { /* 非 JSON 响应 */ }
+              resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, data, body })
+            })
+          })
+          req.on('timeout', () => {
+            req.destroy(new Error('timeout 15s'))
+          })
+          req.on('error', (e) => {
+            console.error('[mt::http-get-json] 请求失败:', e.message)
+            resolve({ ok: false, status: 0, data: null, error: e.message })
+          })
+          req.end()
+        } catch (e) {
+          console.error('[mt::http-get-json] 异常:', e)
+          resolve({ ok: false, status: 0, data: null, error: e.message || String(e) })
+        }
+      })
+    })
+
     // 从本地文件路径写图片到剪贴板（适合大图，避免 IPC 传输巨大 dataUrl）
-    ipcMain.handle('mt::write-image-file-to-clipboard', async (event, filePath) => {
+    ipcMain.handle('mt::write-image-file-to-clipboard', async(event, filePath) => {
       try {
         // 用 fs.readFileSync 读取原始字节，比 createFromPath 更可靠地处理 Windows 中文路径
         // createFromPath 在 Windows 上可能使用 ANSI API 导致中文路径无法读取
