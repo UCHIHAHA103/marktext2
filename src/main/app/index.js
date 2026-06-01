@@ -856,6 +856,52 @@ class App {
       })
     })
 
+    // 检查 GitHub release latest 的 tag_name（不走 API，走 github.com/releases/latest 的 302 跳转）
+    // 优势：不消耗 GitHub API rate limit (60/h/IP, 公司共用 IP 容易耗尽), 也不需要 token
+    // 流程：HEAD https://github.com/{owner}/{repo}/releases/latest → 302 → Location: /releases/tag/v2.0.1
+    ipcMain.handle('mt::get-latest-release-tag', (event, ownerRepo) => {
+      console.log('[mt::get-latest-release-tag] 查询 ' + ownerRepo)
+      return new Promise((resolve) => {
+        try {
+          const https = require('https')
+          const options = {
+            method: 'HEAD',
+            hostname: 'github.com',
+            path: `/${ownerRepo}/releases/latest`,
+            headers: {
+              'User-Agent': `marktext-app/${app.getVersion()}`
+            },
+            timeout: 15000
+          }
+          const req = https.request(options, (res) => {
+            console.log(`[mt::get-latest-release-tag] status=${res.statusCode}, location=${res.headers.location || ''}`)
+            if (res.statusCode === 302 || res.statusCode === 301) {
+              const loc = res.headers.location || ''
+              // location 形如 https://github.com/UCHIHAHA103/marktext2/releases/tag/v2.0.1
+              const m = loc.match(/\/releases\/tag\/([^/?#]+)/)
+              if (m) {
+                const tag = decodeURIComponent(m[1])
+                resolve({ ok: true, tag, html_url: loc })
+                return
+              }
+              resolve({ ok: false, status: res.statusCode, error: 'redirect location 解析失败: ' + loc })
+              return
+            }
+            resolve({ ok: false, status: res.statusCode, error: `HTTP ${res.statusCode}` })
+          })
+          req.on('timeout', () => { req.destroy(new Error('timeout 15s')) })
+          req.on('error', (e) => {
+            console.error('[mt::get-latest-release-tag] 请求失败:', e.message)
+            resolve({ ok: false, status: 0, error: e.message })
+          })
+          req.end()
+        } catch (e) {
+          console.error('[mt::get-latest-release-tag] 异常:', e)
+          resolve({ ok: false, status: 0, error: e.message || String(e) })
+        }
+      })
+    })
+
     // 从本地文件路径写图片到剪贴板（适合大图，避免 IPC 传输巨大 dataUrl）
     ipcMain.handle('mt::write-image-file-to-clipboard', async(event, filePath) => {
       try {

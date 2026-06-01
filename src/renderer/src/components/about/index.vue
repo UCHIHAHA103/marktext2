@@ -81,8 +81,8 @@ const showAboutDialog = ref(false)
 const store = useMainStore()
 
 // ─── 检查更新 ────────────────────────────────────────────
-const RELEASES_API = 'https://api.github.com/repos/UCHIHAHA103/marktext2/releases/latest'
-const RELEASES_API_FALLBACK = 'https://api.github.com/repos/UCHIHAHA103/marktext2/releases'
+// 走 github.com/releases/latest 的 302 跳转, 不消耗 API rate limit (60/h/IP, 公司共用 IP 容易耗尽)
+const REPO = 'UCHIHAHA103/marktext2'
 
 const updateChecking = ref(false)
 const updateMessage = ref('')
@@ -109,43 +109,26 @@ const checkUpdate = async () => {
   updateLevel.value = ''
   updateUrl.value = ''
   console.log('[checkUpdate] start, current=' + store.appVersion)
-  // 走 main 进程 IPC 请求, 绕过 renderer 的 CSP / fetch UA 限制
-  const httpGet = window.electron?.ipcRenderer?.invoke
-  if (!httpGet) {
+  // 走 main 进程 IPC：通过 github.com/releases/latest 的 302 跳转拿 tag, 不消耗 API rate limit
+  const invoke = window.electron?.ipcRenderer?.invoke
+  if (!invoke) {
     updateLevel.value = 'error'
     updateMessage.value = t('about.checkFailed') + '：IPC 不可用'
     updateChecking.value = false
     return
   }
   try {
-    let release = null
-    let firstErr = null
-
-    console.log('[checkUpdate] fetching /releases/latest via IPC...')
-    const r1 = await window.electron.ipcRenderer.invoke('mt::http-get-json', RELEASES_API, { 'X-GitHub-Api-Version': '2022-11-28' })
-    console.log(`[checkUpdate] /latest result: ok=${r1.ok}, status=${r1.status}, error=${r1.error || ''}`)
-    if (r1.ok && r1.data && r1.data.tag_name) {
-      release = r1.data
-    } else {
-      firstErr = r1.error ? r1.error : `HTTP ${r1.status}`
+    console.log('[checkUpdate] querying github.com/releases/latest 302 ...')
+    const r = await invoke('mt::get-latest-release-tag', REPO)
+    console.log(`[checkUpdate] result: ok=${r.ok}, tag=${r.tag || ''}, error=${r.error || ''}`)
+    if (!r.ok || !r.tag) {
+      throw new Error(r.error || `HTTP ${r.status}`)
     }
-
-    // /releases/latest 不返回 prerelease，回落到 /releases 取第一条
-    if (!release || !release.tag_name) {
-      console.log('[checkUpdate] fallback to /releases (含 prerelease)...')
-      const r2 = await window.electron.ipcRenderer.invoke('mt::http-get-json', RELEASES_API_FALLBACK, { 'X-GitHub-Api-Version': '2022-11-28' })
-      console.log(`[checkUpdate] /releases result: ok=${r2.ok}, status=${r2.status}, error=${r2.error || ''}`)
-      if (!r2.ok) throw new Error(`GitHub API ${r2.status || 'NETWORK'} (latest err: ${firstErr || 'n/a'}; current err: ${r2.error || 'n/a'})`)
-      const list = r2.data
-      release = Array.isArray(list) && list.length ? list[0] : null
-    }
-    if (!release || !release.tag_name) throw new Error('no release found')
-
-    const latest = release.tag_name
+    const latest = r.tag
     const current = store.appVersion
     console.log(`[checkUpdate] latest=${latest}, current=${current}`)
     const cmp = compareVersion(latest, current)
-    updateUrl.value = release.html_url || ''
+    updateUrl.value = r.html_url || `https://github.com/${REPO}/releases/tag/${latest}`
 
     if (cmp > 0) {
       updateLevel.value = 'success'
