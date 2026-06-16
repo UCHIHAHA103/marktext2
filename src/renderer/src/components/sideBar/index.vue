@@ -133,6 +133,7 @@ import { useLayoutStore } from '@/store/layout'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
 import { useI18n } from 'vue-i18n'
+import { usePreferencesStore } from '@/store/preferences'
 
 import { sideBarIcons } from './help'
 import Tree from './tree.vue'
@@ -145,6 +146,7 @@ const { t } = useI18n()
 const layoutStore = useLayoutStore()
 const projectStore = useProjectStore()
 const editorStore = useEditorStore()
+const preferencesStore = usePreferencesStore()
 
 const dragBar = ref(null)
 const openedFiles = ref([])
@@ -180,11 +182,33 @@ onMounted(() => {
     // The floating sidebar has width:0 (absolute), so .editor-middle width equals
     // window width minus title-bar etc. We use window.innerWidth directly.
     const checkNarrow = () => {
-      isNarrow.value = window.innerWidth < 700
+      // Check if the floating pills would overlap the editor content.
+      // The pills are at left:14px, ~180px wide horizontally.
+      // If #ag-editor-id left edge is < 200px, pills overlap content → go vertical.
+      const editor = document.querySelector('#ag-editor-id')
+      const pillsRight = 14 + 180 // left position + horizontal pills width
+      let narrow = false
+      if (editor) {
+        const rect = editor.getBoundingClientRect()
+        narrow = rect.left < pillsRight
+      } else {
+        // Fallback: use window width
+        narrow = window.innerWidth < 700
+      }
+      console.log(`[DEBUG-sidebar] editorLeft=${editor ? Math.round(editor.getBoundingClientRect().left) : 'N/A'}, pillsRight=${pillsRight}, isNarrow=${narrow}`)
+      isNarrow.value = narrow
     }
     checkNarrow()
     onResizeHandler = checkNarrow
     window.addEventListener('resize', onResizeHandler)
+
+    // Also re-check when sidebar visibility or editor width setting changes
+    watch(showSideBar, () => { nextTick(checkNarrow) })
+    const { editorLineWidth } = storeToRefs(preferencesStore)
+    watch(editorLineWidth, () => {
+      // Wait for CSS to apply before measuring
+      setTimeout(checkNarrow, 100)
+    })
   })
 })
 
