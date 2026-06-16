@@ -66,7 +66,7 @@
 
     <!-- 悬浮模式：毛玻璃胶囊（始终可见）+ 浮层（按需展开） -->
     <template v-else>
-      <div class="float-pills">
+      <div class="float-pills" :class="{ vertical: isNarrow }">
         <div
           v-for="c of sideBarIcons"
           :key="c.id"
@@ -105,7 +105,7 @@
 
       <div
         class="float-layer"
-        :class="['float-layer--' + (rightColumn || 'none'), { show: !!rightColumn }]"
+        :class="['float-layer--' + (rightColumn || 'none'), { show: !!rightColumn, vertical: isNarrow }]"
       >
         <tree
           v-if="rightColumn === 'files'"
@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useLayoutStore } from '@/store/layout'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
@@ -149,6 +149,8 @@ const editorStore = useEditorStore()
 const dragBar = ref(null)
 const openedFiles = ref([])
 const panelWidth = ref(280)
+const isNarrow = ref(false)
+let resizeObserver = null
 
 const { rightColumn, showSideBar, sideBarWidth, sideBarPinned } = storeToRefs(layoutStore)
 const { projectTree } = storeToRefs(projectStore)
@@ -174,7 +176,25 @@ onMounted(() => {
       bindDragBar(dragBar.value)
       dragBarBound = dragBar.value
     }
+    // Observe editor-middle width to toggle narrow (vertical) layout for float-pills
+    const editorMiddle = document.querySelector('.editor-middle')
+    if (editorMiddle) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          // When the editor area is narrower than 500px, switch pills to vertical
+          isNarrow.value = entry.contentRect.width < 500
+        }
+      })
+      resizeObserver.observe(editorMiddle)
+    }
   })
+})
+
+onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 
 const bindDragBar = (dragBarEl) => {
@@ -312,6 +332,22 @@ const togglePinned = () => {
   background: rgba(127, 127, 127, 0.3);
   margin: 0 4px;
   flex-shrink: 0;
+}
+
+/* ── Narrow/Vertical layout: pills stack vertically ── */
+.float-pills.vertical {
+  flex-direction: column;
+  border-radius: 11px;
+}
+.float-pills.vertical .pill-divider {
+  width: 18px;
+  height: 1px;
+  margin: 4px 0;
+}
+/* When vertical, position the float-layer to the right of the pills instead of below */
+.float-layer.vertical {
+  top: 52px;
+  left: 52px;
 }
 
 /* 浮层：飞书风格毛玻璃，浮在编辑区上。宽度锁死 280，三种模式高度处理不同 */
