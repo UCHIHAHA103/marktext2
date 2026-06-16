@@ -150,7 +150,7 @@ kbd {
     min-width: 400px;
     min-height: 100%;
     margin: 0 auto;
-    padding: 20px 50px 100px 50px;
+    padding: 20px max(50px, 5vw) 100px max(50px, 5vw);
     box-sizing: border-box;
     cursor: text;
   }
