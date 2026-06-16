@@ -181,32 +181,51 @@ onMounted(() => {
     // Use window resize to toggle narrow (vertical) layout for float-pills.
     // The floating sidebar has width:0 (absolute), so .editor-middle width equals
     // window width minus title-bar etc. We use window.innerWidth directly.
+    const pillsRight = 14 + 180 // left position + horizontal pills width
+    let resizeRaf = null
+
     const checkNarrow = () => {
-      // Check if the floating pills would overlap the editor content.
-      // The pills are at left:14px, ~180px wide horizontally.
-      // If #ag-editor-id left edge is < 200px, pills overlap content → go vertical.
       const editor = document.querySelector('#ag-editor-id')
-      const pillsRight = 14 + 180 // left position + horizontal pills width
       let narrow = false
       if (editor) {
-        const rect = editor.getBoundingClientRect()
-        narrow = rect.left < pillsRight
+        narrow = editor.getBoundingClientRect().left < pillsRight
       } else {
-        // Fallback: use window width
         narrow = window.innerWidth < 700
       }
-      console.log(`[DEBUG-sidebar] editorLeft=${editor ? Math.round(editor.getBoundingClientRect().left) : 'N/A'}, pillsRight=${pillsRight}, isNarrow=${narrow}`)
-      isNarrow.value = narrow
+      if (isNarrow.value !== narrow) {
+        console.log(`[DEBUG-sidebar] editorLeft=${editor ? Math.round(editor.getBoundingClientRect().left) : 'N/A'}, pillsRight=${pillsRight}, isNarrow=${narrow}`)
+        isNarrow.value = narrow
+      }
     }
-    checkNarrow()
-    onResizeHandler = checkNarrow
+
+    // Throttled resize handler (one check per animation frame)
+    const onResize = () => {
+      if (resizeRaf) return
+      resizeRaf = requestAnimationFrame(() => {
+        checkNarrow()
+        resizeRaf = null
+      })
+    }
+
+    // Delayed initial check: #ag-editor-id may not exist yet at mount time.
+    // Retry every 200ms up to 3s until the element appears.
+    let initRetries = 0
+    const initCheck = () => {
+      checkNarrow()
+      if (!document.querySelector('#ag-editor-id') && initRetries < 15) {
+        initRetries++
+        setTimeout(initCheck, 200)
+      }
+    }
+    initCheck()
+
+    onResizeHandler = onResize
     window.addEventListener('resize', onResizeHandler)
 
     // Also re-check when sidebar visibility or editor width setting changes
     watch(showSideBar, () => { nextTick(checkNarrow) })
     const { editorLineWidth } = storeToRefs(preferencesStore)
     watch(editorLineWidth, () => {
-      // Wait for CSS to apply before measuring
       setTimeout(checkNarrow, 100)
     })
   })
@@ -305,6 +324,8 @@ const togglePinned = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
+  /* Smooth transition for horizontal ↔ vertical switch */
+  transition: flex-direction 0s, width 0.25s ease, height 0.25s ease, border-radius 0.25s ease;
 }
 
 .pill-btn {
@@ -377,6 +398,8 @@ const togglePinned = () => {
   position: absolute;
   top: 96px;
   left: 14px;
+  /* Smooth repositioning when switching between horizontal/vertical pills */
+  transition: top 0.25s ease, left 0.25s ease, opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   width: 280px;
   z-index: 55;
   background: var(--sideBarBgColor);
