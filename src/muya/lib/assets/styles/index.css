@@ -1396,6 +1396,22 @@ i.ag-footnote-backlink {
 .ag-read-only .ag-gray {
   display: none !important;
 }
+/* 预览模式隐藏 frontmatter（YAML 元数据块，用户不需要看到语法标记） */
+.ag-read-only figure[data-role="FRONTMATTER"] {
+  display: none !important;
+}
+/* 预览模式隐藏代码块语法标记（```）和所有容器块的编辑图标 */
+.ag-read-only .ag-container-block .ag-code-content .ag-language {
+  display: none !important;
+}
+.ag-read-only .ag-container-icon {
+  display: none !important;
+}
+/* 预览模式隐藏段落前的 # 标记和列表标记符 */
+.ag-read-only .ag-bullet-list-marker,
+.ag-read-only .ag-order-list-marker {
+  color: transparent;
+}
 
 /* #1869: 标题折叠图标（与 frontMenu 子菜单同款边框三角，非 Unicode，避免 Emoji） */
 [data-head] {

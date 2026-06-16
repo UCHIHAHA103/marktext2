@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue'
 import { useLayoutStore } from '@/store/layout'
 import { useProjectStore } from '@/store/project'
 import { useEditorStore } from '@/store/editor'
@@ -150,7 +150,7 @@ const dragBar = ref(null)
 const openedFiles = ref([])
 const panelWidth = ref(280)
 const isNarrow = ref(false)
-let resizeObserver = null
+let onResizeHandler = null
 
 const { rightColumn, showSideBar, sideBarWidth, sideBarPinned } = storeToRefs(layoutStore)
 const { projectTree } = storeToRefs(projectStore)
@@ -176,24 +176,22 @@ onMounted(() => {
       bindDragBar(dragBar.value)
       dragBarBound = dragBar.value
     }
-    // Observe editor-middle width to toggle narrow (vertical) layout for float-pills
-    const editorMiddle = document.querySelector('.editor-middle')
-    if (editorMiddle) {
-      resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          // When the editor area is narrower than 500px, switch pills to vertical
-          isNarrow.value = entry.contentRect.width < 500
-        }
-      })
-      resizeObserver.observe(editorMiddle)
+    // Use window resize to toggle narrow (vertical) layout for float-pills.
+    // The floating sidebar has width:0 (absolute), so .editor-middle width equals
+    // window width minus title-bar etc. We use window.innerWidth directly.
+    const checkNarrow = () => {
+      isNarrow.value = window.innerWidth < 700
     }
+    checkNarrow()
+    onResizeHandler = checkNarrow
+    window.addEventListener('resize', onResizeHandler)
   })
 })
 
 onBeforeUnmount(() => {
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-    resizeObserver = null
+  if (onResizeHandler) {
+    window.removeEventListener('resize', onResizeHandler)
+    onResizeHandler = null
   }
 })
 
