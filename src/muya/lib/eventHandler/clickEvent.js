@@ -129,7 +129,31 @@ class ClickEvent {
       if (codeCopy) {
         event.stopPropagation()
         event.preventDefault()
-        return this.muya.contentState.copyCodeBlock(event)
+        this.muya.contentState.copyCodeBlock(event)
+        // Show checkmark feedback for 2 seconds
+        const iconInner = codeCopy.querySelector('.icon-inner')
+        if (iconInner) {
+          const origBg = iconInner.style.background
+          const origBgSize = iconInner.style.backgroundSize
+          iconInner.style.background = 'none'
+          iconInner.textContent = '\u2714'
+          iconInner.style.fontSize = '16px'
+          iconInner.style.color = '#4caf50'
+          iconInner.style.display = 'flex'
+          iconInner.style.alignItems = 'center'
+          iconInner.style.justifyContent = 'center'
+          setTimeout(() => {
+            iconInner.textContent = ''
+            iconInner.style.background = origBg
+            iconInner.style.backgroundSize = origBgSize || '100%'
+            iconInner.style.fontSize = ''
+            iconInner.style.color = ''
+            iconInner.style.display = ''
+            iconInner.style.alignItems = ''
+            iconInner.style.justifyContent = ''
+          }, 2000)
+        }
+        return
       }
       // 点击语言输入框时立即弹出语言选择下拉（飞书式代码块语言选择）
       const langInput = target.closest(`.${CLASS_OR_ID.AG_LANGUAGE_INPUT}`)

@@ -74,7 +74,7 @@ class EditorWindow extends BaseWindow {
       spellcheckerEnabled,
       spellcheckerLanguage
     } = preferences.getAll()
-    const resolvedSideBarVisibility = restoreLayoutState ? !!sideBarVisibility : false
+    const resolvedSideBarVisibility = restoreLayoutState ? !!sideBarVisibility : true
 
     // Enable native or custom/frameless window and titlebar
     if (!isOsx) {
@@ -459,7 +459,7 @@ class EditorWindow extends BaseWindow {
       const { preferences } = this._accessor
       const { sideBarVisibility, restoreLayoutState, tabBarVisibility, sourceCodeModeEnabled } =
         preferences.getAll()
-      const resolvedSideBarVisibility = restoreLayoutState ? !!sideBarVisibility : false
+      const resolvedSideBarVisibility = restoreLayoutState ? !!sideBarVisibility : true
       const lineEnding = preferences.getPreferredEol()
       browserWindow.webContents.send('mt::bootstrap-editor', {
         addBlankTab: true,

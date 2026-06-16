@@ -169,11 +169,12 @@ export default function renderContainerBlock(parent, block, activeBlocks, matche
   } else if (type === 'figure') {
     if (functionType) {
       Object.assign(data.dataset, { role: functionType.toUpperCase() })
-      if (functionType === 'table' && activeBlocks[0] && activeBlocks[0].functionType === 'cellContent') {
+      const isReadOnly = this.muya && this.muya.options && this.muya.options.readOnly
+      if (functionType === 'table' && activeBlocks[0] && activeBlocks[0].functionType === 'cellContent' && !isReadOnly) {
         children.unshift(renderTableTools(activeBlocks, t))
-      } else if (functionType !== 'footnote') {
+      } else if (functionType !== 'footnote' && !isReadOnly) {
         children.unshift(renderEditIcon(t))
-      } else {
+      } else if (functionType === 'footnote') {
         children.push(footnoteJumpIcon())
       }
     }
