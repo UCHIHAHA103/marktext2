@@ -1522,7 +1522,9 @@ export const useEditorStore = defineStore('editor', {
         styleEle.setAttribute('id', EDITOR_ZOOM_STYLE_ID)
         document.head.appendChild(styleEle)
       }
-      styleEle.innerHTML = `.editor-component { zoom: ${zoomFactor}; }`
+      // Apply zoom to #ag-editor-id (content only), NOT .editor-component,
+      // so that the scrollbar remains at native size.
+      styleEle.innerHTML = `#ag-editor-id { zoom: ${zoomFactor}; }`
     },
 
     LISTEN_WINDOW_ZOOM() {

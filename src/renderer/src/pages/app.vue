@@ -14,6 +14,13 @@
       @toggle-read-only="toggleReadOnly"
     />
 
+    <!-- Zoom level indicator (center of screen, auto-fades) -->
+    <transition name="zoom-fade">
+      <div v-if="zoomIndicatorVisible" class="zoom-indicator">
+        {{ Math.round(zoom * 100) }}%
+      </div>
+    </transition>
+
     <div class="editor-container">
       <side-bar v-if="init" />
 
@@ -85,6 +92,8 @@ const commandCenterStore = useCommandCenterStore()
 const notificationStore = useNotificationStore()
 
 const timer = ref(null)
+const zoomIndicatorVisible = ref(false)
+let zoomIndicatorTimer = null
 
 // States from Pini
 const { windowActive, platform, init } = storeToRefs(mainStore)
@@ -126,8 +135,16 @@ watch(customCss, (value, oldValue) => {
   }
 })
 
-watch(zoom, (zoomValue) => {
+watch(zoom, (zoomValue, oldValue) => {
   bus.emit('mt::window-zoom', zoomValue)
+  // Show zoom indicator when zoom changes (skip initial load where oldValue is undefined)
+  if (oldValue !== undefined) {
+    zoomIndicatorVisible.value = true
+    if (zoomIndicatorTimer) clearTimeout(zoomIndicatorTimer)
+    zoomIndicatorTimer = setTimeout(() => {
+      zoomIndicatorVisible.value = false
+    }, 1500)
+  }
 })
 
 const setupDragDropHandler = () => {
@@ -259,5 +276,32 @@ onMounted(async () => {
     flex: 1;
     min-width: 0;
   }
+}
+
+/* Zoom level indicator */
+.zoom-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 8px;
+  z-index: 99999;
+  pointer-events: none;
+  user-select: none;
+}
+.zoom-fade-enter-active {
+  transition: opacity 0.15s ease;
+}
+.zoom-fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+.zoom-fade-enter-from,
+.zoom-fade-leave-to {
+  opacity: 0;
 }
 </style>
