@@ -1486,12 +1486,16 @@ onBeforeUnmount(() => {
   /* [centering-fix] 显式 width:100% 修复 5a79cd5b 后正文不居中
      根因：app.vue 改造后 .editor-container 不再 absolute+100vw，宽度靠 flex 链路传递；
      .editor-component 默认 width:auto 在 flex 父容器中不一定撑满，导致 #ag-editor-id 父级宽度异常 */
+  /* max-width: 90% + margin:auto 让编辑区整体留出两侧呼吸空间，
+     内部 #ag-editor-id 的百分比 max-width 都相对这个 90% 父容器等比缩放 */
+  max-width: 90%;
   width: 100%;
   height: 100%;
   overflow: auto;
   box-sizing: border-box;
   cursor: default;
   overflow-anchor: none !important;
+  margin: 0 auto;
 }
 
 .typewriter .editor-component {

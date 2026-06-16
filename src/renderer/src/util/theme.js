@@ -218,9 +218,9 @@ export const setEditorWidth = (value) => {
   const EDITOR_WIDTH_STYLE_ID = 'editor-width'
   let result = ''
   if (value && /^[0-9]+%$/.test(value)) {
-    // Percentage mode: cap at 90% to leave breathing room on both sides.
-    const pct = Math.min(parseInt(value, 10), 90)
-    result = `:root { --editorAreaWidth: ${pct}%; }`
+    // Percentage mode: use directly. The parent .editor-component is capped at 90%
+    // so all percentage values are relative to that, giving breathing room automatically.
+    result = `:root { --editorAreaWidth: ${value}; }`
   } else if (value && /^[0-9]+(?:ch|px)$/.test(value)) {
     // Legacy fixed-width mode: add 100px for padding.
     result = `:root { --editorAreaWidth: calc(100px + ${value}); }`
