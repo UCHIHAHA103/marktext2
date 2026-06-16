@@ -2,17 +2,13 @@ import { screen } from 'electron'
 import { isLinux } from '../config'
 
 export const zoomIn = win => {
-  const { webContents } = win
-  const zoom = webContents.getZoomFactor()
-  // WORKAROUND: We need to set zoom on the browser window due to Electron#16018.
-  webContents.send('mt::window-zoom', Math.min(2.0, zoom + 0.125))
+  // Send delta direction to renderer; renderer calculates new zoom from its own store
+  // because we no longer use webFrame.setZoomFactor (CSS zoom only affects editor area).
+  win.webContents.send('mt::window-zoom-delta', 'in')
 }
 
 export const zoomOut = win => {
-  const { webContents } = win
-  const zoom = webContents.getZoomFactor()
-  // WORKAROUND: We need to set zoom on the browser window due to Electron#16018.
-  webContents.send('mt::window-zoom', Math.max(0.5, zoom - 0.125))
+  win.webContents.send('mt::window-zoom-delta', 'out')
 }
 
 export const centerWindowOptions = options => {

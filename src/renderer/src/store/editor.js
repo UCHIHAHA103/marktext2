@@ -1526,12 +1526,25 @@ export const useEditorStore = defineStore('editor', {
     },
 
     LISTEN_WINDOW_ZOOM() {
+      // Absolute zoom value (from preferences dropdown)
       window.electron.ipcRenderer.on('mt::window-zoom', (_, zoomFactor) => {
         this.EDIT_ZOOM(zoomFactor)
       })
       bus.on('mt::window-zoom', (zoomFactor) => {
         this.EDIT_ZOOM(zoomFactor)
       })
+
+      // Delta zoom (from Ctrl+Wheel / menu zoomIn/zoomOut)
+      window.electron.ipcRenderer.on('mt::window-zoom-delta', (_, direction) => {
+        const preferencesStore = usePreferencesStore()
+        const current = preferencesStore.zoom ?? 1.0
+        const step = 0.125
+        const newZoom = direction === 'in'
+          ? Math.min(2.0, current + step)
+          : Math.max(0.5, current - step)
+        this.EDIT_ZOOM(newZoom)
+      })
+
       // Apply the persisted zoom once on startup. CSS-based zoom (editor-only) is not
       // persistent like webFrame.setZoomFactor, so it must be re-applied each launch.
       const preferencesStore = usePreferencesStore()
