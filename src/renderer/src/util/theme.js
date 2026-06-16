@@ -217,8 +217,11 @@ export const setWrapCodeBlocks = (value) => {
 export const setEditorWidth = (value) => {
   const EDITOR_WIDTH_STYLE_ID = 'editor-width'
   let result = ''
-  if (value && /^[0-9]+(?:ch|px|%)$/.test(value)) {
-    // Overwrite the theme value and add 100px for padding.
+  if (value && /^[0-9]+%$/.test(value)) {
+    // Percentage mode: use directly so the editor area scales with the viewport.
+    result = `:root { --editorAreaWidth: ${value}; }`
+  } else if (value && /^[0-9]+(?:ch|px)$/.test(value)) {
+    // Legacy fixed-width mode: add 100px for padding.
     result = `:root { --editorAreaWidth: calc(100px + ${value}); }`
   }
   let styleEle = document.querySelector(`#${EDITOR_WIDTH_STYLE_ID}`)

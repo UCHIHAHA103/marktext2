@@ -1514,7 +1514,15 @@ export const useEditorStore = defineStore('editor', {
       if (zoom !== zoomFactor) {
         preferencesStore.SET_SINGLE_PREFERENCE({ type: 'zoom', value: zoomFactor })
       }
-      window.electron.webFrame.setZoomFactor(zoomFactor)
+      // Only zoom the editor content area, keep title bar / tabs / sidebar / toolbar intact.
+      const EDITOR_ZOOM_STYLE_ID = 'editor-zoom'
+      let styleEle = document.querySelector(`#${EDITOR_ZOOM_STYLE_ID}`)
+      if (!styleEle) {
+        styleEle = document.createElement('style')
+        styleEle.setAttribute('id', EDITOR_ZOOM_STYLE_ID)
+        document.head.appendChild(styleEle)
+      }
+      styleEle.innerHTML = `.editor-component { zoom: ${zoomFactor}; }`
     },
 
     LISTEN_WINDOW_ZOOM() {
@@ -1524,6 +1532,10 @@ export const useEditorStore = defineStore('editor', {
       bus.on('mt::window-zoom', (zoomFactor) => {
         this.EDIT_ZOOM(zoomFactor)
       })
+      // Apply the persisted zoom once on startup. CSS-based zoom (editor-only) is not
+      // persistent like webFrame.setZoomFactor, so it must be re-applied each launch.
+      const preferencesStore = usePreferencesStore()
+      this.EDIT_ZOOM(preferencesStore.zoom ?? 1.0)
     },
 
     LISTEN_FOR_RELOAD_IMAGES() {

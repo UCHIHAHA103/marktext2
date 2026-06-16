@@ -30,11 +30,10 @@
           :value="editorFontFamily"
           :on-change="(value) => onSelectChange('editorFontFamily', value)"
         />
-        <text-box
+        <cur-select
           :description="t('preferences.editor.textEditor.maxWidth')"
-          :notes="t('preferences.editor.textEditor.maxWidthNotes')"
-          :input="editorLineWidth"
-          :regex-validator="/^(?:$|[0-9]+(?:ch|px|%)$)/"
+          :value="editorLineWidth"
+          :options="editorMaxWidthOptions"
           :on-change="(value) => onSelectChange('editorLineWidth', value)"
         />
       </template>
@@ -193,8 +192,8 @@ import FontTextBox from '../common/fontTextBox/index.vue'
 import Range from '../common/range/index.vue'
 import CurSelect from '../common/select/index.vue'
 import Bool from '../common/bool/index.vue'
-import TextBox from '../common/textBox/index.vue'
 import {
+  editorMaxWidthOptions,
   tabSizeOptions,
   getEndOfLineOptions,
   getTextDirectionOptions,
