@@ -66,7 +66,7 @@
 
     <!-- 悬浮模式：毛玻璃胶囊（始终可见）+ 浮层（按需展开） -->
     <template v-else>
-      <div class="float-pills" :class="{ vertical: isNarrow }">
+      <div class="float-pills" :class="{ vertical: isNarrow, transitioning: pillsTransitioning }">
         <div
           v-for="c of sideBarIcons"
           :key="c.id"
@@ -152,6 +152,7 @@ const dragBar = ref(null)
 const openedFiles = ref([])
 const panelWidth = ref(280)
 const isNarrow = ref(false)
+const pillsTransitioning = ref(false)
 let onResizeHandler = null
 
 const { rightColumn, showSideBar, sideBarWidth, sideBarPinned } = storeToRefs(layoutStore)
@@ -194,7 +195,12 @@ onMounted(() => {
       }
       if (isNarrow.value !== narrow) {
         console.log(`[DEBUG-sidebar] editorLeft=${editor ? Math.round(editor.getBoundingClientRect().left) : 'N/A'}, pillsRight=${pillsRight}, isNarrow=${narrow}`)
-        isNarrow.value = narrow
+        // Fade out → change layout → fade in
+        pillsTransitioning.value = true
+        setTimeout(() => {
+          isNarrow.value = narrow
+          setTimeout(() => { pillsTransitioning.value = false }, 20)
+        }, 150)
       }
     }
 
@@ -324,8 +330,12 @@ const togglePinned = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10), 0 1px 3px rgba(0, 0, 0, 0.06);
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
-  /* Smooth transition for horizontal ↔ vertical switch */
-  transition: flex-direction 0s, width 0.25s ease, height 0.25s ease, border-radius 0.25s ease;
+  /* Fade transition for layout switch */
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+.float-pills.transitioning {
+  opacity: 0;
 }
 
 .pill-btn {
@@ -380,17 +390,16 @@ const togglePinned = () => {
 /* ── Narrow/Vertical layout: pills stack vertically ── */
 .float-pills.vertical {
   flex-direction: column;
-  border-radius: 11px;
 }
 .float-pills.vertical .pill-divider {
   width: 18px;
   height: 1px;
   margin: 4px 0;
 }
-/* When vertical, position the float-layer to the right of the pills instead of below */
+/* When vertical, position the float-layer to the right of the pills (pills width ~40px + gap) */
 .float-layer.vertical {
   top: 52px;
-  left: 52px;
+  left: 60px;
 }
 
 /* 浮层：飞书风格毛玻璃，浮在编辑区上。宽度锁死 280，三种模式高度处理不同 */
